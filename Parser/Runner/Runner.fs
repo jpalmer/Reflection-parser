@@ -2,6 +2,6 @@
 
 open parser
 
-printfn "%A" (realparse "      "  )
+printfn "%A" (realparse "#if _Test"  )
 printfn "done"
 System.Console.Read() |> ignore

@@ -1,8 +1,12 @@
 module parser
 open Microsoft.FSharp.Reflection
 open Attributes
-let grammartypes = FSharpType.GetUnionCases(typeof<grammar.Main>)
 
+let grammartypes = FSharpType.GetUnionCases(typeof<grammar.Main>)
+type SomeFail<'t> = 
+    |SSome of 't
+    |NNone
+    |Fail
 let (|OtherL|FSUnion|FSTuple|Other|) (t:System.Type) =
     if t.IsGenericType && t.GetGenericTypeDefinition() =[].GetType().GetGenericTypeDefinition() then OtherL(t.GetGenericArguments())
     else if Microsoft.FSharp.Reflection.FSharpType.IsUnion t then FSUnion
@@ -10,6 +14,11 @@ let (|OtherL|FSUnion|FSTuple|Other|) (t:System.Type) =
     else Other(t)
 let checkPrefix (text:char[]) index prefixchar=
     text.[index] = prefixchar
+let checkNprefix (text:char[]) index prefixchars = 
+    prefixchars |> Array.forall (fun c -> not (checkPrefix text index c))
+let checkPrefixClass (text:char[]) index (classes:System.Globalization.UnicodeCategory[]) =
+    let actualcat = System.Globalization.CharUnicodeInfo.GetUnicodeCategory( text.[index])
+    classes |> Array.exists (fun t -> t=actualcat)
 let checkPrefixs (text:char[]) index (prefstr:string)=
     let mutable worked = true
     if index + prefstr.Length <= text.Length then
@@ -17,16 +26,38 @@ let checkPrefixs (text:char[]) index (prefstr:string)=
             if text.[index+i] <> prefstr.[i] then worked <- false
         worked
     else false
-type Possibilities = 
-    |PList of obj
-    |PObj of obj
-    |PNone 
-    member x.element =
-        match x with
-        |PList(t) -> t
-        |PObj(t) ->t
-        |PNone -> Operators.Unchecked.defaultof<obj>
-//Note - the object that this returns is in fact a strongly typed F# list
+
+let checkprefix (t:UnionCaseInfo) text (index:int ref) =
+    let prechar = t.GetCustomAttributes(typeof<Prefixc>)
+    if prechar.Length = 1 then 
+        if checkPrefix text !index ((prechar.[0] :?> Prefixc).Prefix) then
+            index := !index + 1;true
+        else false
+    else true
+let checkprefixclass (t:UnionCaseInfo) text (index:int ref) =
+    let prechar = t.GetCustomAttributes(typeof<GrabPrefixClass>)
+    if prechar.Length = 1 then 
+        if checkPrefixClass text !index ((prechar.[0] :?> GrabPrefixClass).Prefix) then
+            let char = text.[!index]
+            index := !index + 1;
+            SSome(FSharpValue.MakeUnion(t,[|char:> obj|]))
+        else Fail
+    else NNone
+let checkprefixs (t:UnionCaseInfo) text (index:int ref) =
+    let prestr = t.GetCustomAttributes(typeof<Prefixs>)
+    if prestr.Length = 1 then
+        let prefstr = (prestr.[0] :?> Prefixs).Prefix
+        if checkPrefixs text !index prefstr then index := !index + prefstr.Length;true
+        else false
+    else true
+let checkNotprefix (t:UnionCaseInfo) text (index: int ref) =
+    let notprefix = t.GetCustomAttributes(typeof<NotPrefixc>)
+    if notprefix.Length = 1 then 
+        if checkNprefix text !index ((notprefix.[0] :?> NotPrefixc).Prefix) then 
+            index := !index + 1;true
+        else false
+    else true
+
 let rec getTypeList elemtypes text index :obj*int=
     let indref = ref index
     let worked = ref true
@@ -50,7 +81,7 @@ let rec getTypeList elemtypes text index :obj*int=
         newres,newind
     else genericListType.GetMethod("get_Empty").Invoke(null,null),index
 
-and getTuple t text index =
+and getTuple t text index = //This is very similar to GetTypeList (which makes some sense as the List code assumes that the elements may be tuples
     let indref = ref index
     let worked = ref true
     let elemtypes = Microsoft.FSharp.Reflection.FSharpType.GetTupleElements(t)
@@ -81,46 +112,41 @@ and getType t text index :bool*obj option *int=
         printfn "I don't know how to get %A" t
         false,None,index
 
+
+
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
     let fields = testcase.GetFields()
     let result :obj [] = Array.zeroCreate (fields |> Array.length)
     let index = ref idx
     let checkok = //preliminary checks
-        if idx < text.Length then
-            let prechar = testcase.GetCustomAttributes(typeof<Prefixc>)
-            if prechar.Length = 1 then 
-                if checkPrefix text idx ((prechar.[0] :?> Prefixc).Prefix) then
-                    index := !index + 1;true
-                else false
-            else 
-                let prestr = testcase.GetCustomAttributes(typeof<Prefixs>)
-                if prestr.Length = 1 then
-                    let prefstr = (prestr.[0] :?> Prefixs).Prefix
-                    if checkPrefixs text idx prefstr then index := !index + prefstr.Length;true
-                    else false
-                else true
+        if idx < text.Length then //this does some unnecersarry checks - can optimise if necersarry later
+            checkprefix testcase text index && checkprefixs testcase text index && checkNotprefix testcase text index
         else false
     if checkok then
-        let success =
-            fields 
-            |> Array.mapi (fun i elem -> i,elem)
-            |> Array.fold (fun state (i,field) ->
-                match state with
-                |false -> false
-                |true -> 
-                    let w,res,newind = getType (field.PropertyType) text !index
-                    index:=newind
-                    if w then result.[i]<-(res.Value)
-                    w) true
-        if success then 
-            let unionargs = result
-            if fields |> Array.length > 0 then
-                let tupletype = FSharpType.MakeTupleType(fields |> Array.map (fun t -> t.PropertyType))
-                let tuple = FSharpValue.MakeTuple(unionargs,tupletype)
-                let typedarr = FSharpValue.GetTupleFields(tuple)
-                Some(!index,FSharpValue.MakeUnion(testcase,typedarr)|>unbox)
-            else Some(!index,FSharpValue.MakeUnion(testcase,result)|>unbox)
-        else None
+        match checkprefixclass testcase text index with
+        |SSome(t) -> Some(!index,t|>unbox)
+        |NNone ->
+            let success =
+                fields 
+                |> Array.mapi (fun i elem -> i,elem)
+                |> Array.fold (fun state (i,field) ->
+                    match state with
+                    |false -> false
+                    |true -> 
+                        let w,res,newind = getType (field.PropertyType) text !index
+                        index:=newind
+                        if w then result.[i]<-(res.Value)
+                        w) true
+            if success then //build the union
+                let unionargs = result
+                if fields |> Array.length > 0 then
+                    let tupletype = FSharpType.MakeTupleType(fields |> Array.map (fun t -> t.PropertyType))
+                    let tuple = FSharpValue.MakeTuple(unionargs,tupletype)
+                    let typedarr = FSharpValue.GetTupleFields(tuple) //is this necersarry? (probably)
+                    Some(!index,FSharpValue.MakeUnion(testcase,typedarr)|>unbox)
+                else Some(!index,FSharpValue.MakeUnion(testcase,result)|>unbox)
+            else None
+        |Fail -> None
     else None
 and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
     let result = ref Microsoft.FSharp.Core.Operators.Unchecked.defaultof<'t>

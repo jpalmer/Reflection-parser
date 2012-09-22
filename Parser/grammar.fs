@@ -1,47 +1,28 @@
 ﻿module grammar 
 open Attributes
-
+open System.Globalization
 //A.1 Lexical Grammar
 //
 //A.1.1      Whitespace
 //
 type wschar = |[<Prefixc(' ')>] Ws
 type WhiteSpace = |Wspace of Plus<wschar>
-//
-// 
-//
-//newline :
-type Newline = |[<Prefixs("\r\n")>] Nl
-//      '\n'
-//
-//      '\r' '\n'
-//
-// 
-//
+type Newline = |[<Prefixs("\r\n")>] Nl //should add support for linux newlines
 type Whitespace_or_newline =
     |WhiteSpace of WhiteSpace
     |Newline of Newline
-//whitespace-or-newline :
-//
-//      whitespace
-//
-//      newline
-//
+
 //A.1.2      Comments
 //
-//block-comment-start : "(*"
-//
-// 
-//
-//block-comment-end : "*)"
-//
-// 
-//
-//end-of-line-comment : "//" [^'\n' '\r']*
+type Block_comment_start = |[<Prefixs("(*")>] Bcs
+type Block_comment_end = |[<Prefixs("*)")>] Bce
+type Inside_End_of_line_comment = |[<NotPrefixc([|'\n';'\r'|])>] ELcc
+type End_of_line_comment = |[<Prefixs(@"//")>] Elc of Inside_End_of_line_comment list
 //
 //A.1.3      Conditional Compilation
 //
 //if-directive : "#if" whitespace ident-text
+type If_directive = |[<Prefixs("#if")>] Ifd of WhiteSpace * Ident_text
 //
 // 
 //
@@ -55,66 +36,24 @@ type Whitespace_or_newline =
 //
 //A.1.4.1     Identifiers
 //
-//digit-char : [0-9]
+and Digit_char = |[<GrabPrefixClass[|UnicodeCategory.DecimalDigitNumber|]>] DC of char
+and Letter_char = |[<GrabPrefixClass[|UnicodeCategory.UppercaseLetter;UnicodeCategory.LowercaseLetter;UnicodeCategory.TitlecaseLetter;UnicodeCategory.ModifierLetter;
+                        UnicodeCategory.OtherLetter;UnicodeCategory.LetterNumber|]>] LC of char
+and Connecting_char = |[<GrabPrefixClass[|UnicodeCategory.ConnectorPunctuation|]>] PC of char
+and Combining_char = |[<GrabPrefixClass[|UnicodeCategory.NonSpacingMark;UnicodeCategory.SpacingCombiningMark |]>] CC of char
+and Formatting_char =  |[<GrabPrefixClass[|UnicodeCategory.Format|]>] PC of char
+and Ident_start_char =
+    |LC of Letter_char |[<Prefixc('_')>] Underscore
+and Ident_char = //the spec has an entry for `_` here but it is not needed - it is included in Connecting_char
+    |LC of Letter_char
+    |DC of Digit_char
+    |CC of Connecting_char
+    |CoC of Combining_char
+    |FC of Formatting_char
+    |[<Prefixc(''')>]Quote 
+
 //
-// 
-//
-//letter-char :
-//
-//      '\Lu'
-//
-//      '\Ll'
-//
-//      '\Lt'
-//
-//      '\Lm'
-//
-//      '\Lo'
-//
-//      '\Nl'
-//
-//connecting-char : '\Pc'
-//
-// 
-//
-//combining-char :
-//
-//      '\Mn'
-//
-//      '\Mc'
-//
-// 
-//
-//formatting-char : '\Cf'
-//
-// 
-//
-//ident-start-char :
-//
-//      letter-char
-//
-//      _
-//
-// 
-//
-//ident-char :
-//
-//      letter-char
-//
-//      digit-char
-//
-//      connecting-char
-//
-//      combining-char
-//
-//      formatting-char
-//
-//      '
-//
-//      _
-//
-// 
-//
+and Ident_text = |IDent_text of Ident_start_char * (Ident_char list)
 //ident-text : ident-start-char ident-char*
 //
 // 
@@ -1996,3 +1935,7 @@ type Whitespace_or_newline =
 
 type Main =
 |Literal of Whitespace_or_newline
+|BCS of Block_comment_start
+|BCE of Block_comment_end
+|ELC of End_of_line_comment
+|Hashif of If_directive
