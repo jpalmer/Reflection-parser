@@ -5,18 +5,22 @@ open Attributes
 //
 //A.1.1      Whitespace
 //
-type WhiteSpace = |[<Prefixc(' ')>] Whitespace of WhiteSpace list
+type wschar = |[<Prefixc(' ')>] Ws
+type WhiteSpace = |Wspace of Plus<wschar>
 //
 // 
 //
 //newline :
-type Newline = |[<Prefixs("\r\n")>] Newline
+type Newline = |[<Prefixs("\r\n")>] Nl
 //      '\n'
 //
 //      '\r' '\n'
 //
 // 
 //
+type Whitespace_or_newline =
+    |WhiteSpace of WhiteSpace
+    |Newline of Newline
 //whitespace-or-newline :
 //
 //      whitespace
@@ -1991,5 +1995,4 @@ type Newline = |[<Prefixs("\r\n")>] Newline
 
 
 type Main =
-|Literal of WhiteSpace
-|Newl of Newline
+|Literal of Whitespace_or_newline

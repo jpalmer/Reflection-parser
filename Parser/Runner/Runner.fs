@@ -2,6 +2,6 @@
 
 open parser
 
-printfn "%A" (realparse System.Environment.NewLine )
+printfn "%A" (realparse "      "  )
 printfn "done"
 System.Console.Read() |> ignore

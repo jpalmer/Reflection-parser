@@ -3,9 +3,10 @@ open Microsoft.FSharp.Reflection
 open Attributes
 let grammartypes = FSharpType.GetUnionCases(typeof<grammar.Main>)
 
-let (|OtherL|FSUnion|Other|) (t:System.Type) =
+let (|OtherL|FSUnion|FSTuple|Other|) (t:System.Type) =
     if t.IsGenericType && t.GetGenericTypeDefinition() =[].GetType().GetGenericTypeDefinition() then OtherL(t.GetGenericArguments())
     else if Microsoft.FSharp.Reflection.FSharpType.IsUnion t then FSUnion
+    else if Microsoft.FSharp.Reflection.FSharpType.IsTuple t then FSTuple
     else Other(t)
 let checkPrefix (text:char[]) index prefixchar=
     text.[index] = prefixchar
@@ -37,7 +38,7 @@ let rec getTypeList elemtypes text index :obj*int=
             if not w then worked := false;res//effectively break
             else
                 indref := newind
-                res ) |> Array.map (fun t -> t.element)
+                res ) |> Array.map (fun t -> t.Value)
     let listtype = typeof<List<_>>.GetGenericTypeDefinition() 
     let genericListType = listtype.MakeGenericType(listelemtype)
     let test = genericListType.GetMethods()
@@ -49,16 +50,36 @@ let rec getTypeList elemtypes text index :obj*int=
         newres,newind
     else genericListType.GetMethod("get_Empty").Invoke(null,null),index
 
-and getType t text index :bool*Possibilities *int=
+and getTuple t text index =
+    let indref = ref index
+    let worked = ref true
+    let elemtypes = Microsoft.FSharp.Reflection.FSharpType.GetTupleElements(t)
+    let res =
+        elemtypes |> Array.map (fun elemtype -> 
+            let w,res,newind = (getType elemtype text !indref)
+            if not w then worked := false;res//effectively break
+            else
+                indref := newind
+                res ) |> Array.map (fun t -> t.Value)
+    if !worked then 
+        let newres = Microsoft.FSharp.Reflection.FSharpValue.MakeTuple(res,t)
+        true,newres,!indref
+    else false,null,index
+and getType t text index :bool*obj option *int=
     printfn "getting type %A index %i" t index
     match t with
     |OtherL(subt) ->
          let r,newind = getTypeList subt text index
-         true,PList(r),newind
+         true,Some(r),newind
     |FSUnion ->
         let worked,res,dex = parse text (FSharpType.GetUnionCases(t)) index
-        worked,PObj(res),dex
-    | _ -> false,PNone,index
+        worked,Some(res|>box),dex
+    |FSTuple ->
+        let worked,res,dex = getTuple t text index
+        worked,Some(res),dex
+    | _ -> 
+        printfn "I don't know how to get %A" t
+        false,None,index
 
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
     let fields = testcase.GetFields()
@@ -89,7 +110,7 @@ and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
                 |true -> 
                     let w,res,newind = getType (field.PropertyType) text !index
                     index:=newind
-                    result.[i]<-(res.element)
+                    if w then result.[i]<-(res.Value)
                     w) true
         if success then 
             let unionargs = result
