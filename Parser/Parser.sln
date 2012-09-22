@@ -5,6 +5,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Parser", "Parser.fsproj", "
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "..\Tests\Tests.fsproj", "{338C9468-6AFE-4EA4-ADE7-F547718130A5}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Runner", "Runner\Runner.fsproj", "{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,16 @@ Global
 		{338C9468-6AFE-4EA4-ADE7-F547718130A5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{338C9468-6AFE-4EA4-ADE7-F547718130A5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{338C9468-6AFE-4EA4-ADE7-F547718130A5}.Release|x86.ActiveCfg = Release|Any CPU
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Debug|x86.ActiveCfg = Debug|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Debug|x86.Build.0 = Debug|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Release|Any CPU.ActiveCfg = Release|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Release|Mixed Platforms.Build.0 = Release|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Release|x86.ActiveCfg = Release|x86
+		{7BD3ED8F-B8F8-4D29-89BD-CD6BB710F976}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

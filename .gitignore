@@ -2,3 +2,9 @@
 *.mdb
 */bin/*
 */obj/*
+*.suo
+*.xml
+*.dll
+*.pdb
+*.XML
+*.txt

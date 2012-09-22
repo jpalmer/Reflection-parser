@@ -13,6 +13,14 @@ type Tests() =
     member x.TestMultipleWhiteSpace() =
         let actual = realparse "     "
         let expected = Literal (Whitespace [Whitespace [Whitespace [Whitespace [Whitespace []]]]])
-
-        printfn "actual %A" actual
         Assert.AreEqual( expected,actual)
+    [<Test>]
+    member x.TestFail() =
+        let actual  = (realparse "azxsdhcv78df")
+        let expected = null
+        Assert.AreEqual(expected,actual)
+    [<Test>]
+    member x.TestNewLine() =
+        let actual  = (realparse System.Environment.NewLine)
+        let expected = Newl(Newline)
+        Assert.AreEqual(expected,actual)

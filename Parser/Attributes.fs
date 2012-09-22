@@ -1,8 +1,12 @@
 ﻿module Attributes
 
-type Prefix(c:char) =
+type Prefixc(c:char) =
     inherit System.Attribute()
     member x.Prefix = c
+
+type Prefixs(s:string) =
+    inherit System.Attribute()
+    member x.Prefix = s
 
 type Postfix(c:char) = 
     inherit System.Attribute()
