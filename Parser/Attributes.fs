@@ -16,8 +16,5 @@ type GrabPrefixClass(c:System.Globalization.UnicodeCategory[]) =
     inherit System.Attribute()
     member x.Prefix = c
 
-type Postfix(c:char) = 
-    inherit System.Attribute()
-    member x.Postfix = c
 
 type Plus<'t> = 't * ('t list)

@@ -6,69 +6,57 @@ open System.Globalization
 //A.1.1      Whitespace
 //
 type wschar = |[<Prefixc(' ')>] Ws
-type WhiteSpace = |Wspace of Plus<wschar>
-type Newline = |[<Prefixs("\r\n")>] Nl //should add support for linux newlines
-type Whitespace_or_newline =
-    |WhiteSpace of WhiteSpace
-    |Newline of Newline
+type whiteSpace = |Wspace of Plus<wschar>
+type newline = |[<Prefixs("\r\n")>] Nl //should add support for linux newlines
+type whitespace_or_newline =
+    |WhiteSpace of whiteSpace
+    |Newline of newline
 
 //A.1.2      Comments
 //
-type Block_comment_start = |[<Prefixs("(*")>] Bcs
-type Block_comment_end = |[<Prefixs("*)")>] Bce
-type Inside_End_of_line_comment = |[<NotPrefixc([|'\n';'\r'|])>] ELcc
-type End_of_line_comment = |[<Prefixs(@"//")>] Elc of Inside_End_of_line_comment list
-//
-//A.1.3      Conditional Compilation
-//
-//if-directive : "#if" whitespace ident-text
-type If_directive = |[<Prefixs("#if")>] Ifd of WhiteSpace * Ident_text
-//
+type block_comment_start = |[<Prefixs("(*")>] Bcs
+type block_comment_end = |[<Prefixs("*)")>] Bce
+type inside_End_of_line_comment = |[<NotPrefixc([|'\n';'\r'|])>] ELcc
+type end_of_line_comment = |[<Prefixs(@"//")>] Elc of inside_End_of_line_comment list
+
 // 
-//
-//else-directive : "#else"
-//
-// 
-//
-//endif-directive : "#endif"
-//
 //A.1.4      Identifiers and Keywords
 //
 //A.1.4.1     Identifiers
 //
-and Digit_char = |[<GrabPrefixClass[|UnicodeCategory.DecimalDigitNumber|]>] DC of char
-and Letter_char = |[<GrabPrefixClass[|UnicodeCategory.UppercaseLetter;UnicodeCategory.LowercaseLetter;UnicodeCategory.TitlecaseLetter;UnicodeCategory.ModifierLetter;
+type digit_char = |[<GrabPrefixClass[|UnicodeCategory.DecimalDigitNumber|]>] DC of char
+type letter_char = |[<GrabPrefixClass[|UnicodeCategory.UppercaseLetter;UnicodeCategory.LowercaseLetter;UnicodeCategory.TitlecaseLetter;UnicodeCategory.ModifierLetter;
                         UnicodeCategory.OtherLetter;UnicodeCategory.LetterNumber|]>] LC of char
-and Connecting_char = |[<GrabPrefixClass[|UnicodeCategory.ConnectorPunctuation|]>] PC of char
-and Combining_char = |[<GrabPrefixClass[|UnicodeCategory.NonSpacingMark;UnicodeCategory.SpacingCombiningMark |]>] CC of char
-and Formatting_char =  |[<GrabPrefixClass[|UnicodeCategory.Format|]>] PC of char
-and Ident_start_char =
-    |LC of Letter_char |[<Prefixc('_')>] Underscore
-and Ident_char = //the spec has an entry for `_` here but it is not needed - it is included in Connecting_char
-    |LC of Letter_char
-    |DC of Digit_char
-    |CC of Connecting_char
-    |CoC of Combining_char
-    |FC of Formatting_char
+type connecting_char = |[<GrabPrefixClass[|UnicodeCategory.ConnectorPunctuation|]>] PC of char
+type combining_char = |[<GrabPrefixClass[|UnicodeCategory.NonSpacingMark;UnicodeCategory.SpacingCombiningMark |]>] CC of char
+type formatting_char =  |[<GrabPrefixClass[|UnicodeCategory.Format|]>] PC of char
+type ident_start_char =
+    |LC of letter_char |[<Prefixc('_')>] Underscore
+type ident_char = //the spec has an entry for `_` here but it is not needed - it is included in Connecting_char
+    |LC of letter_char
+    |DC of digit_char
+    |CC of connecting_char
+    |CoC of combining_char
+    |FC of formatting_char
     |[<Prefixc(''')>]Quote 
-
+type ident_text = |IDent_text of ident_start_char * (ident_char list)
 //
-and Ident_text = |IDent_text of Ident_start_char * (Ident_char list)
-//ident-text : ident-start-char ident-char*
+//A.1.3      Conditional Compilation
+//
+type else_directive = |[<Prefixs("#else")>] Elsed
+type endif_directive = |[<Prefixs("#endif")>] Endifd
+type if_directive = |[<Prefixs("#if")>] Ifd of whiteSpace * ident_text
+
+
 //
 // 
 //
-//ident :
+
+type ident = |IT of ident_text //the spec has some weird stuff here - but this is what the source does
+type _dotchar = |[<Prefixc('.')>]Dotchar
+type _ident_dot = |Ident_dot of ident * _dotchar
+type long_ident = |LI of ident * ((_dotchar * ident) list)
 //
-//      ident-text  
-//
-//      `` [^ '\n' '\r' '\t']+
-//
-//      [^ '\n' '\r' '\t'] ``
-//
-//A.1.4.2     Long Identifiers
-//
-//long-ident :  ident '.' ... '.' ident
 //
 //long-ident-or-op : 
 //
@@ -77,33 +65,102 @@ and Ident_text = |IDent_text of Ident_start_char * (Ident_char list)
 //      ident-or-op
 //
 //A.1.4.3     Keywords
-//
-//ident-keyword : one of
-//
-//      abstract and as assert base begin class default delegate do done
-//
-//      downcast downto elif else end exception extern false finally for
-//
-//      fun function global if in inherit inline interface internal lazy let
-//
-//      match member module mutable namespace new null of open or
-//
-//      override private public rec return sig static struct then to
-//
-//      true try type upcast use val void when while with yield
-//
-// 
-//
-//reserved-ident-keyword : one of
-//
-//      atomic break checked component const constraint constructor
-//
-//      continue eager fixed fori functor include
-//
-//      measure method mixin object parallel params process protected pure
-//
-//      recursive sealed tailcall trait virtual volatile
-//
+//for generating these the following awk is useful  awk '{printf("|[<Prefixs(\"%s\")>] %s\n" ,$0,$0)}'
+type ident_keywork = 
+    |[<Prefixs("abstract")>] Abstract
+    |[<Prefixs("and")>] And
+    |[<Prefixs("as")>] As
+    |[<Prefixs("assert")>] Assert
+    |[<Prefixs("base")>] Base
+    |[<Prefixs("begin")>] Begin
+    |[<Prefixs("class")>] Class
+    |[<Prefixs("default")>] Default
+    |[<Prefixs("delegate")>] Delegate
+    |[<Prefixs("do")>] Do
+    |[<Prefixs("done")>] Done
+    |[<Prefixs("downcast")>] Downcast
+    |[<Prefixs("downto")>] Downto
+    |[<Prefixs("elif")>] Elif
+    |[<Prefixs("else")>] Else
+    |[<Prefixs("end")>] End
+    |[<Prefixs("exception")>] Exception
+    |[<Prefixs("extern")>] Extern
+    |[<Prefixs("false")>] False
+    |[<Prefixs("finally")>] Finally
+    |[<Prefixs("for")>] For
+    |[<Prefixs("fun")>] Fun
+    |[<Prefixs("function")>] Function
+    |[<Prefixs("global")>] Global
+    |[<Prefixs("if")>] If
+    |[<Prefixs("in")>] In
+    |[<Prefixs("inherit")>] Inherit
+    |[<Prefixs("inline")>] Inline
+    |[<Prefixs("interface")>] Interface
+    |[<Prefixs("internal")>] Internal
+    |[<Prefixs("lazy")>] Lazy
+    |[<Prefixs("let")>] Let
+    |[<Prefixs("match")>] Match
+    |[<Prefixs("member")>] Member
+    |[<Prefixs("module")>] Module
+    |[<Prefixs("mutable")>] Mutable
+    |[<Prefixs("namespace")>] Namespace
+    |[<Prefixs("new")>] New
+    |[<Prefixs("null")>] Null
+    |[<Prefixs("of")>] Of
+    |[<Prefixs("open")>] Open
+    |[<Prefixs("or")>] Or
+    |[<Prefixs("override")>] Override
+    |[<Prefixs("private")>] Private
+    |[<Prefixs("public")>] Public
+    |[<Prefixs("rec")>] Rec
+    |[<Prefixs("return")>] Return
+    |[<Prefixs("sig")>] Sig
+    |[<Prefixs("static")>] Static
+    |[<Prefixs("struct")>] Struct
+    |[<Prefixs("then")>] Then
+    |[<Prefixs("to")>] To
+    |[<Prefixs("true")>] True
+    |[<Prefixs("try")>] Try
+    |[<Prefixs("type")>] Type
+    |[<Prefixs("upcast")>] Upcast
+    |[<Prefixs("use")>] Use
+    |[<Prefixs("val")>] Val
+    |[<Prefixs("void")>] Void
+    |[<Prefixs("when")>] When
+    |[<Prefixs("while")>] While
+    |[<Prefixs("with")>] With
+    |[<Prefixs("yield")>] Yield
+
+type reserved_ident_keyword =
+    |[<Prefixs("atomic")>] Atomic
+    |[<Prefixs("break")>] Break
+    |[<Prefixs("checked")>] Checked
+    |[<Prefixs("component")>] Component
+    |[<Prefixs("const")>] Const
+    |[<Prefixs("constraint")>] Constraint
+    |[<Prefixs("constructor")>] Constructor
+    |[<Prefixs("continue")>] Continue
+    |[<Prefixs("eager")>] Eager
+    |[<Prefixs("fixed")>] Fixed
+    |[<Prefixs("fori")>] Fori
+    |[<Prefixs("functor")>] Functor
+    |[<Prefixs("include")>] Include
+    |[<Prefixs("measure")>] Measure
+    |[<Prefixs("method")>] Method
+    |[<Prefixs("mixin")>] Mixin
+    |[<Prefixs("object")>] Object
+    |[<Prefixs("parallel")>] Parallel
+    |[<Prefixs("params")>] Params
+    |[<Prefixs("process")>] Process
+    |[<Prefixs("protected")>] Protected
+    |[<Prefixs("pure")>] Pure
+    |[<Prefixs("recursive")>] Recursive
+    |[<Prefixs("sealed")>] Sealed
+    |[<Prefixs("tailcall")>] Tailcall
+    |[<Prefixs("trait")>] Trait
+    |[<Prefixs("virtual")>] Virtual
+    |[<Prefixs("volatile")>] Volatile
+
 // 
 //
 //reserved-ident-formats :
@@ -1934,8 +1991,9 @@ and Ident_text = |IDent_text of Ident_start_char * (Ident_char list)
 
 
 type Main =
-|Literal of Whitespace_or_newline
-|BCS of Block_comment_start
-|BCE of Block_comment_end
-|ELC of End_of_line_comment
-|Hashif of If_directive
+|Literal of whitespace_or_newline
+|BCS of block_comment_start
+|BCE of block_comment_end
+|ELC of end_of_line_comment
+|Hashif of if_directive
+|LongID of long_ident
