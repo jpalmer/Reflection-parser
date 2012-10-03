@@ -1,7 +1,8 @@
 module parser
 open Microsoft.FSharp.Reflection
 open Attributes
-
+//TODO: Add support for option types
+//TODO: When parsing a tuple allow for whitespace between elements - could grab it from grammar.Whitespace
 let grammartypes = FSharpType.GetUnionCases(typeof<grammar.Main>)
 type SomeFail<'t> = 
     |SSome of 't
@@ -96,6 +97,7 @@ and getTuple t text index = //This is very similar to GetTypeList (which makes s
         let newres = Microsoft.FSharp.Reflection.FSharpValue.MakeTuple(res,t)
         true,newres,!indref
     else false,null,index
+//need to add support for option types
 and getType t text index :bool*obj option *int=
     printfn "getting type %A index %i" t index
     match t with
