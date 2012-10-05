@@ -226,6 +226,7 @@ type tilde = |[<Prefixc( '~')>]Dummy
 type greaterthan = |[<Prefixc( '>')>]Dummy
 type comma = |[<Prefixc( ',')>]Dummy
 type colon = |[<Prefixc( ':')>]Dummy
+type quote = |[<Prefixc( ''')>]Dummy
 
 
 type doubledot = |[<Prefixs("..")>]Dummy
@@ -275,15 +276,9 @@ type colonquest = |[<Prefixs(":?")>]Dummy
 //
 // 
 //
-//char-char :
+and char_char = |SCC of simple_char_char |EC of escape_char |Trgr of trigraph |Unicode_short of unicodegraph_short
 //
-//      simple-char-char
-//
-//      escape-char
-//
-//      trigraph
-//
-//      unicodegraph-short
+
 //
 // 
 //
@@ -313,7 +308,7 @@ type colonquest = |[<Prefixs(":?")>]Dummy
 //
 // 
 //
-//char : ' char-char '
+and char_ = |Char of quote * char_char * quote 
 //
 // 
 //
@@ -365,64 +360,61 @@ type colonquest = |[<Prefixs(":?")>]Dummy
 //
 //A.1.6      Numeric Literals
 //
-//digit  : [0-9]
+and digit  = |[<GrabPrefixClass([|System.Globalization.UnicodeCategory.DecimalDigitNumber|])>] D
 //
 // 
 //
-//hexdigit     :
-//
-//      digit
-//
-//      [A-F]
-//
-//      [a-f]
-//
-// 
-//
-//octaldigit : [0-7]
-//
-// 
-//
-//bitdigit : [0-1]
+and hexchar = 
+|[<Prefixc('A')>] A |[<Prefixc('B')>] B |[<Prefixc('C')>] C |[<Prefixc('D')>] D |[<Prefixc('E')>] E |[<Prefixc('F')>] F
+|[<Prefixc('a')>] Aa|[<Prefixc('b')>] Bb|[<Prefixc('c')>] Cc|[<Prefixc('d')>] Dd|[<Prefixc('e')>] Ee|[<Prefixc('f')>] Ff
+and hexdigit =
+|D of digit
+|H of hexchar
+and octaldigit =
+|[<Prefixc('0')>] D0 |[<Prefixc('1')>] D1 |[<Prefixc('2')>] D2 |[<Prefixc('3')>] D3 
+|[<Prefixc('4')>] D4 |[<Prefixc('5')>] D5 |[<Prefixc('6')>] D6 |[<Prefixc('7')>] D7 
+and bitdigit = |[<Prefixc('0')>] D0 |[<Prefixc('1')>] D1
 //
 // 
 //
-//int : digit+
+and int_ =  Plus<digit>
 //
 // 
 //
-//xint :
-//
-//      int
-//
-//      0 (x|X) hexdigit+
-//
-//      0 (o|O) octaldigit+
-//
-//      0 (b|B) bitdigit+
-//
-// 
-//
-and sbyte = |Sbyte of xint * FAIL 'y'
-//
-// 
-//
-//byte  : xint 'uy'
-//
-// 
-//
-//int16 : xint 's'
-//
-// 
-//
-//uint16 : xint 'us'
-//
-// 
-//
-//int32 : xint 'l'
-//
-// 
-//
+and zerochar = |[<Prefixc('0')>] Dummy
+and xXchar = |[<Prefixc('X')>] Dummy|[<Prefixc('x')>] Dummy2
+and oOchar = |[<Prefixc('O')>] Dummy|[<Prefixc('o')>] Dummy2
+and bBchar = |[<Prefixc('B')>] Dummy|[<Prefixc('b')>] Dummy2
+and xint =
+|Int of int
+|Hexint of zerochar * xXchar * Plus<hexdigit>
+|Octint of zerochar * xXchar * Plus<octaldigit>
+|Binint of zerochar * xXchar * Plus<bitdigit>
+
+and ychar =     |[<Prefixc('y')>]Dummy
+and schar =     |[<Prefixc('s')>]Dummy
+and lchar =     |[<Prefixc('l')>]Dummy
+and Lchar =     |[<Prefixc('L')>]Dummy
+and Fchar =     |[<Prefixc('F')>]Dummy
+and fchar =     |[<Prefixc('f')>]Dummy
+and uychar =    |[<Prefixs("uy")>]Dummy
+and uschar =    |[<Prefixs("us")>]Dummy
+and ULchar =    |[<Prefixs("UL")>]Dummy
+and uLchar =    |[<Prefixs("uL")>]Dummy
+and lfchar =    |[<Prefixs("lf")>]Dummy
+and LFchar =    |[<Prefixs("LF")>]Dummy
+
+and sbyte_ =    |Sbyte of   xint * ychar
+and byte_  =    |Byte of    xint * uychar
+and int16_ =    |Int16 of   xint * schar 
+and uint16_ =   |Uint16 of  xint * uschar 
+and int32_ =    |Int32 of   xint * lchar
+and eEchar =  |[<Prefixc('E')>] Dummy|[<Prefixc('e')>] Dummy2
+and pmchar =  |[<Prefixc('+')>] Plus|[<Prefixc('-')>] Minus
+and bignumId = 
+|[<Prefixc('Q')>] Dummy  |[<Prefixc('R')>] Dummy2 |[<Prefixc('Z')>] Dummy3
+|[<Prefixc('I')>] Dummy4 |[<Prefixc('N')>] Dummy5 |[<Prefixc('G')>] Dummy6
+
 //uint32 :
 //
 //      xint 'ul'
@@ -432,42 +424,19 @@ and sbyte = |Sbyte of xint * FAIL 'y'
 // 
 //
 //nativeint : xint 'n'
-//
-// 
-//
 //unativeint : xint 'un'
-//
+and int64_ =    |Int64 of   xint * Lchar
+and uint64_ =   |Uint64 of  xint * ULchar 
+                |Uint64_ of xint * uLchar
+and ieee32 =    |Float of   float_ * Fchar
+                |Float_ of  float_ * fchar
+                |Fint of    xint * lfchar
 // 
 //
-//int64 : xint 'L'
-//
-// 
-//
-//uint64 :
-//
-//      xint 'UL'
-//
-//      xint 'uL'
-//
-// 
-//
-//ieee32 :
-//
-//      float [Ff]
-//
-//      xint 'lf'
-//
-// 
-//
-//ieee64 :
-//
-//      float
-//
-//      xint 'LF'
-//
-// 
-//
-//bignum : int ('Q' | 'R' | 'Z' | 'I' | 'N' | 'G')
+and ieee64 =    |Float of   float_
+                |Fint of    xint * LFchar
+
+and bignum = int_ * bignumId 
 //
 // 
 //
@@ -475,14 +444,10 @@ and sbyte = |Sbyte of xint * FAIL 'y'
 //
 // 
 //
-//float :
-//
-//      digit+ . digit* 
-//
-//      digit+ (. digit* )? (e|E) (+|-)? digit+
-//
-// 
-//
+and float_ =
+|Dec of Plus<digit> * dot * List<digit>
+|Decl of Plus<digit> * Option<dot * List<digit>> * eEchar * Option<pmchar> * List<digit>
+
 //reserved-literal-formats :
 //
 //      (xint | ieee32 | ieee64) ident-char+
@@ -608,7 +573,7 @@ and const_ =
 |Char of char_      |String of string_  |Verbatim_str of verbatim_string        |Bytestring of bytestring
 |Bytechar of bytechar                   |False of false_w   |True of true_w     |Unit of open_brack * close_brack
 |Sbytem of sbyte_ * measure_encased     |Int16m of int16_ * measure_encased     |Int32m of int32_ * measure_encased
-|Ieee32m of ieee32 * measure_encased    |Ieee64 of ieee64 * measure_encased     |Decimalm of decimal * measure_encased
+|Ieee32m of ieee32 * measure_encased    |Ieee64m of ieee64 * measure_encased    |Decimalm of decimal * measure_encased
 // 
 //
 //A.2 Syntactic Grammar
