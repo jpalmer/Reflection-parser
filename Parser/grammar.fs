@@ -1,4 +1,4 @@
-﻿module grammar 
+module grammar 
 open Attributes
 open System.Globalization
 //A.1 Lexical Grammar
