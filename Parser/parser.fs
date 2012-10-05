@@ -64,25 +64,17 @@ let rec getTypeList elemtypes text index :obj*int=
     let worked = ref true
     let listelemtype = //F# applies the trivial optimisation to eliminate tuples with 1 element
         if elemtypes |> Array.length > 1 then FSharpType.MakeTupleType(elemtypes) else elemtypes.[0]
-    let res =
-        elemtypes |> Array.map (fun elemtype -> 
-            let w,res,newind = (getType elemtype text !indref)
-            if not w then worked := false;res//effectively break
-            else
-                indref := newind
-                res ) |> Array.map (fun t -> t.Value)
+    let res = getTuple (FSharpType.MakeTupleType(elemtypes)) text index
     let listtype = typeof<List<_>>.GetGenericTypeDefinition() 
     let genericListType = listtype.MakeGenericType(listelemtype)
-    let test = genericListType.GetMethods()
     if !worked then 
-        //If we have a list of 'a * 'b * ... we need to make a tuple type - otherwise don't bother
-        let tupled  = if elemtypes |> Array.length > 1 then FSharpValue.MakeTuple(res ,listelemtype) else res.[0]
         let newr,newind = getTypeList elemtypes text !indref
-        let newres = genericListType.GetMethod("Cons").Invoke(null,[|tupled;newr|])
+        let newres = genericListType.GetMethod("Cons").Invoke(null,[|res;newr|])
         newres,newind
     else genericListType.GetMethod("get_Empty").Invoke(null,null),index
 
-and getTuple t text index = //This is very similar to GetTypeList (which makes some sense as the List code assumes that the elements may be tuples
+//If just one element return the untupled element
+and getTuple t text index = 
     let indref = ref index
     let worked = ref true
     let elemtypes = Microsoft.FSharp.Reflection.FSharpType.GetTupleElements(t)
@@ -94,7 +86,10 @@ and getTuple t text index = //This is very similar to GetTypeList (which makes s
                 indref := newind
                 res ) |> Array.map (fun t -> t.Value)
     if !worked then 
-        let newres = Microsoft.FSharp.Reflection.FSharpValue.MakeTuple(res,t)
+        let newres = 
+            if elemtypes |> Array.length > 1 then
+                Microsoft.FSharp.Reflection.FSharpValue.MakeTuple(res,t)
+            else res.[0]
         true,newres,!indref
     else false,null,index
 //need to add support for option types
