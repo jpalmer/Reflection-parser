@@ -66,6 +66,7 @@ type abstract_w =
     |[<Prefixs("abstract")>] Abstract
 type and_w =
     |[<Prefixs("and")>] And
+type as_w = 
     |[<Prefixs("as")>] As
     |[<Prefixs("assert")>] Assert
     |[<Prefixs("base")>] Base
@@ -119,6 +120,7 @@ type of_w =
     |[<Prefixs("of")>] Of
 type open_w =
     |[<Prefixs("open")>] Open
+type or_w = 
     |[<Prefixs("or")>] Or
     |[<Prefixs("override")>] Override
 type private_w =
@@ -146,10 +148,16 @@ type when_w =
     |[<Prefixs("when")>] When
 type while_w = 
     |[<Prefixs("while")>] While
+type with_w = 
     |[<Prefixs("with")>] With
+type yield_w = 
     |[<Prefixs("yield")>] Yield
 
-//this is not in the spec - but add in anyway
+//these are not in the spec - but add in anyway
+type set_w = 
+    |[<Prefixs("set")>] Set
+type get_w = 
+    |[<Prefixs("get")>] Get
 type not_w = 
     |[<Prefixs("not")>] Not
 type unit_w = 
@@ -223,6 +231,8 @@ type colon = |[<Prefixc( ':')>]Dummy
 type doubledot = |[<Prefixs("..")>]Dummy
 type dcop = |[<Prefixs(":>")>]Dummy
 type goesto = |[<Prefixs("->")>]Dummy
+type cons = |[<Prefixs("::")>]Dummy
+type colonquest = |[<Prefixs(":?")>]Dummy
 //symbolic-keyword : one of
 //
 //      let! use! do! yield! return!
@@ -393,7 +403,7 @@ type goesto = |[<Prefixs("->")>]Dummy
 //
 // 
 //
-//sbyte : xint 'y'
+and sbyte = |Sbyte of xint * FAIL 'y'
 //
 // 
 //
@@ -589,64 +599,16 @@ and symbolic_op =
 //
 //A.1.9.4     Constants
 //
-//const :
-//
-//      sbyte
-//
-//      int16
-//
-//      int32
-//
-//      int64
-//
-//      byte
-//
-//      uint16
-//
-//      uint32
-//
-//      int
-//
-//      uint64
-//
-//      ieee32
-//
-//      ieee64
-//
-//      bignum
-//
-//      char
-//
-//      string
-//
-//      verbatim-string
-//
-//      bytestring
-//
-//      verbatim-bytearray
-//
-//      bytechar
-//
-//      false
-//
-//      true
-//
-//      ()
-//
-//      sbyte < measure-literal >
-//
-//      int16 < measure-literal >
-//
-//      int32 < measure-literal >
-//
-//      int64 < measure-literal >
-//
-//      ieee32 < measure-literal >
-//
-//      ieee64 < measure-literal >
-//
-//      decimal < measure-literal >
-//
+//not in spec but useful
+and measure_encased = lessthan * measure_literal * greaterthan
+//FIXME??? interesting - Decimal can't be without measure
+and const_ = 
+|Sbyte of sbyte_    |Int16 of int16_    |Int32 of int32_    |Int64 of int64_    |Byte of byte_      |Uint16 of uint16_ 
+|Uint32 of uint32   |Int of int_        |Uint64 of uint64_  |Ieee32 of ieee32   |Ieee64 of ieee64   |Bignum of bignum
+|Char of char_      |String of string_  |Verbatim_str of verbatim_string        |Bytestring of bytestring
+|Bytechar of bytechar                   |False of false_w   |True of true_w     |Unit of open_brack * close_brack
+|Sbytem of sbyte_ * measure_encased     |Int16m of int16_ * measure_encased     |Int32m of int32_ * measure_encased
+|Ieee32m of ieee32 * measure_encased    |Ieee64 of ieee64 * measure_encased     |Decimalm of decimal * measure_encased
 // 
 //
 //A.2 Syntactic Grammar
@@ -663,7 +625,7 @@ and symbolic_op =
 //
 //A.2.1     Program Format
 //
-type implementation_file =
+and implementation_file =
 |NDL of Plus<namespace_decl_group>     
 //|NM of named_module
 //|AM of anonynmous_module
@@ -955,28 +917,17 @@ and constraint_ =
 |Enum of typar * colon * enum_w * lessthan * type_w * greaterthan
 |Unman of typar * colon * unmanaged_w
 |Delegate of typar * colon * delegate_w * lessthan * type_ * comma * type_ * greaterthan
-//
-//
-//      typar : enum<type>
-//
-//      typar : unmanaged
-//
-//      typar : delegate<type, type>
-//
-// 
-//
+
+
 and typar_defn = |TD of Option<attributes> * typar  
 and typar_defns = |TDs of lessthan * typar_defn * List<comma * typar_defn> * Option<typar_constraints> * greaterthan  
 and typar_constraints = |TC of when_w * constraint_ * List<and_w * constraint_> 
 //
 // 
 //
-//static-typars :
-//
-//      ^ident
-//
-//      (^ident or ... or ^ident)
-//
+and static_typars =
+|Ident  of caret * ident
+|Multi of open_brack * caret * ident * List<or_w*caret*ident> * close_brack
 // 
 //
 //A.2.2.1     Equality and Comparison Constraints
@@ -1142,10 +1093,7 @@ and function_defn =
 //
 // 
 //
-//return-type :
-//
-//      : type
-//
+and return_type = |Ret of colon * type_
 // 
 //
 //function-or-value-defns :
@@ -1154,7 +1102,7 @@ and function_defn =
 //
 // 
 //
-//argument-pats: atomic-pat ... atomic-pat
+and argument_pats= Plus<atomic_pat> 
 //
 // 
 //
@@ -1346,42 +1294,16 @@ and function_defn =
 //
 // 
 //
-//pat :
-//
-//      const
-//
-//      long-ident pat-paramopt patopt
-//
-//      _
-//
-//      pat as ident
-//
-//      pat '|' pat
-//
-//      pat '&' pat
-//
-//      pat :: pat
-//
-//      pat : type
-//
-//      pat,...,pat
-//
-//      (pat)
-//
-//      list-pat
-//
-//      array-pat
-//
-//      record-pat
-//
-//      :? atomic-type
-//
-//      :? atomic-type as ident    
-//
-//      null
-//
-//      attributes pat
-//
+and pat = //some of these moved into atomic_pat
+|As of pat * as_w * ident
+|Or of pat * pipe * pat
+|And of pat * amp * pat
+|Cons of pat * cons * pat
+|Type of pat * colon * type_
+|Tuple of pat * List<comma*pat>
+|DowncastGet of colonquest * atomic_type * as_w * ident
+|Attr of attributes * pat
+|Atomic_pat of atomic_pat
 // 
 //
 //list-pat :
@@ -1404,7 +1326,17 @@ and function_defn =
 //
 // 
 //
-//atomic-pat :
+and atomic_pat =
+|Const of const_
+|Li of long_ident * Option<pat_param> * Option<pat>
+|List_pat of list_pat
+|Record_pat of record_pat
+|Array_pat of array_pat
+|Brack of open_brack * pat * close_brack
+|Downcast of colonquest * atomic_type
+|Null of null_w
+|Underscore of underscore
+
 //
 //    pat      one of
 //
@@ -1692,18 +1624,13 @@ and function_defn =
 //
 // 
 //
-//member-sig :
+and member_sig =
 //
-//      ident typar-defnsopt : curried-sig
-//
-//      ident typar-defnsopt : curried-sig with get
-//
-//      ident typar-defnsopt : curried-sig with set
-//
-//      ident typar-defnsopt : curried-sig with get,set
-//
-//      ident typar-defnsopt : curried-sig with set,get  
-//
+|NoGetSet of  ident *  Option<typar_defns> *colonv *  curried_sig
+|Get of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * get_w
+|Set of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * set_w
+|GetSet of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * get_w * comma * set_w
+|SetGet of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * set_w * comma * get_w
 // 
 //
 //curried-sig : args-spec -> ... -> args-spec -> type
@@ -1812,12 +1739,9 @@ and function_defn =
 //
 // 
 //
-//measure-literal :
-//
-//      _
-//
-//      measure-literal-simp
-//
+and measure_literal =
+|Underscore of underscore
+|MLS of measure_literal_simp
 // 
 //
 //const :
