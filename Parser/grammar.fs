@@ -47,11 +47,6 @@ type else_directive = |[<Prefixs("#else")>] Elsed
 type endif_directive = |[<Prefixs("#endif")>] Endifd
 type if_directive = |[<Prefixs("#if")>] Ifd of whiteSpace * ident_text
 
-
-//
-// 
-//
-
 type ident = |IT of ident_text //the spec has some weird stuff here - but this is what the source does
 type _dotchar = |[<Prefixc('.')>]Dotchar
 type _ident_dot = |Ident_dot of ident * _dotchar
@@ -69,6 +64,7 @@ type long_ident = |LI of ident * ((_dotchar * ident) list)
 
 type abstract_w = 
     |[<Prefixs("abstract")>] Abstract
+type and_w =
     |[<Prefixs("and")>] And
     |[<Prefixs("as")>] As
     |[<Prefixs("assert")>] Assert
@@ -76,6 +72,7 @@ type abstract_w =
     |[<Prefixs("begin")>] Begin
     |[<Prefixs("class")>] Class
     |[<Prefixs("default")>] Default
+type delegate_w = 
     |[<Prefixs("delegate")>] Delegate
     |[<Prefixs("do")>] Do
     |[<Prefixs("done")>] Done
@@ -95,9 +92,13 @@ type abstract_w =
     |[<Prefixs("if")>] If
     |[<Prefixs("in")>] In
     |[<Prefixs("inherit")>] Inherit
+type inline_w =
     |[<Prefixs("inline")>] Inline
+type interface_w = 
     |[<Prefixs("interface")>] Interface
+type internal_w = 
     |[<Prefixs("internal")>] Internal
+type lazy_w = 
     |[<Prefixs("lazy")>] Lazy
 type let_w =
     |[<Prefixs("let")>] Let
@@ -112,31 +113,51 @@ type namespace_w =
     |[<Prefixs("namespace")>] Namespace
 type new_w = 
     |[<Prefixs("new")>] New
+type null_w =
     |[<Prefixs("null")>] Null
+type of_w =
     |[<Prefixs("of")>] Of
+type open_w =
     |[<Prefixs("open")>] Open
     |[<Prefixs("or")>] Or
     |[<Prefixs("override")>] Override
+type private_w =
     |[<Prefixs("private")>] Private
+type public_w = 
     |[<Prefixs("public")>] Public
+type rec_w = 
     |[<Prefixs("rec")>] Rec
     |[<Prefixs("return")>] Return
     |[<Prefixs("sig")>] Sig
     |[<Prefixs("static")>] Static
+type struct_w =
     |[<Prefixs("struct")>] Struct
     |[<Prefixs("then")>] Then
     |[<Prefixs("to")>] To
     |[<Prefixs("true")>] True
     |[<Prefixs("try")>] Try
+type type_w =
     |[<Prefixs("type")>] Type
     |[<Prefixs("upcast")>] Upcast
     |[<Prefixs("use")>] Use
     |[<Prefixs("val")>] Val
     |[<Prefixs("void")>] Void
+type when_w =
     |[<Prefixs("when")>] When
+type while_w = 
     |[<Prefixs("while")>] While
     |[<Prefixs("with")>] With
     |[<Prefixs("yield")>] Yield
+
+//this is not in the spec - but add in anyway
+type not_w = 
+    |[<Prefixs("not")>] Not
+type unit_w = 
+    |[<Prefixs("unit")>] Unit
+type enum_w = 
+    |[<Prefixs("enum")>] Enum
+type unmanaged_w = 
+    |[<Prefixs("unmanaged")>] Unmanaged
 
 type reserved_ident_keyword =
     |[<Prefixs("atomic")>] Atomic
@@ -176,6 +197,32 @@ type reserved_ident_keyword =
 //
 //A.1.4.4     Symbolic Keywords
 //
+type equals = |[<Prefixc('=')>]Dummy
+type open_brack = |[<Prefixc('(')>]Dummy
+type close_brack = |[<Prefixc(')')>]Dummy
+type star = |[<Prefixc('*')>]Dummy
+type pipe = |[<Prefixc('|')>]Dummy
+type underscore = |[<Prefixc('_')>]Dummy
+type question = |[<Prefixc('?')>]Dummy
+type lessthan = |[<Prefixc('<')>]Dummy
+type dash = |[<Prefixc('-')>]Dummy
+type bang = |[<Prefixc( '!')>]Dummy
+type percent = |[<Prefixc( '%')>]Dummy
+type amp = |[<Prefixc( '&')>]Dummy
+type plus = |[<Prefixc( '+')>]Dummy
+type dot = |[<Prefixc( '.')>]Dummy
+type slash = |[<Prefixc( '/')>]Dummy
+type at = |[<Prefixc( '@')>]Dummy
+type caret = |[<Prefixc( '^')>]Dummy
+type tilde = |[<Prefixc( '~')>]Dummy
+type greaterthan = |[<Prefixc( '>')>]Dummy
+type comma = |[<Prefixc( ',')>]Dummy
+type colon = |[<Prefixc( ':')>]Dummy
+
+
+type doubledot = |[<Prefixs("..")>]Dummy
+type dcop = |[<Prefixs(":>")>]Dummy
+type goesto = |[<Prefixs("->")>]Dummy
 //symbolic-keyword : one of
 //
 //      let! use! do! yield! return!
@@ -456,79 +503,51 @@ type reserved_ident_keyword =
 //
 //A.1.9.1     Operator Names
 //
-//ident-or-op :
+type ident_or_op =
+|Id of ident
+|ON of open_brack * op_name * close_brack
+|Star of open_brack * star * close_brack
+// 
 //
-//      ident
-//
-//      ( op-name )
-//
-//      (*)
+and op_name =
+|SO of symbolic_op
+|RO of range_op_name
+|AP of active_pattern_op_name
 //
 // 
 //
-//op-name :
-//
-//      symbolic-op
-//
-//      range-op-name
-//
-//      active-pattern-op-name
+and range_op_name =
+|Dots of doubledot
+|DDots of doubledot * doubledot
 //
 // 
 //
-//range-op-name :
-//
-//      ..      
-//
-//      .. ..      
-//
-// 
-//
-//active-pattern-op-name :
-//
-//      | ident | ... | ident |
-//
-//      | ident | ... | ident | _ |
+and active_pattern_op_name =
+|Without_ of pipe * ident * List<pipe*ident> * pipe
+|With_    of pipe * ident * List<pipe*ident> * pipe * underscore * pipe
 //
 //A.1.9.2     Symbolic Operators
 //
-//first-op-char : one of
+and first_op_char =  
+|Bang of bang           |Percent of percent |Amp of amp                 |Star of star   |Plus of plus   |Dash of dash 
+|Dot of dot             |Slash of slash     |At of at                   |Caret of caret |Pipe of pipe   |Tilde of tilde
+|Lessthan of lessthan   |Equals of equals   |Greaterthan of greaterthan 
+and op_char =
+|FOC of first_op_char
+|Question of question
+and quote_op_left =
+|[<Prefixs("<@@")>]Double 
+|[<Prefixs("<@")>]Single 
+and quote_op_right =
+|[<Prefixs("@@>")>]Double 
+|[<Prefixs("@>")>]Single 
 //
-//       !%&*+-./<=>@^|~
-//
-// 
-//
-//op-char :
-//
-//      first-op-char
-//
-//      ?
-//
-// 
-//
-//quote-op-left :
-//
-//      <@ <@@
-//
-// 
-//
-//quote-op-right :
-//
-//      @> @@>
-//
-// 
-//
-//symbolic-op:
-//
-//      ?
-//
-//      ?<-
-//
-//      first-op-char op-char*
-//
-//      quote-op-left
-//
-//      quote-op-right
+and symbolic_op = 
+|Q of question
+|Qassign of question*lessthan*dash
+|Oplist of first_op_char * List<op_char>
+|Qopleft of quote_op_left
+|Qopright of quote_op_right
 //
 //A.1.9.3     Infix and Prefix Operators
 //
@@ -719,7 +738,7 @@ and module_elem =
 //
 and module_function_or_value_defn =
 //
-|LetF of      attributesopt * let_w * function_defn
+|LetF of      Option<attributes> * let_w * function_defn
 //
 //      attributesopt let value-defn
 //
@@ -742,16 +761,10 @@ and module_function_or_value_defn =
 // 
 //
 and module_elems = |ME of module_elem list 
-//
-// 
-//
-//access :
-//
-//      private
-//
-//      internal
-//
-//      public
+and access =
+|Private of private_w
+|Internal of internal_w
+|Public of public_w
 //
 //A.2.1.2     Namespace and Module Signatures
 //
@@ -883,7 +896,7 @@ and module_elems = |ME of module_elem list
 //
 //A.2.2      Types and Type Constraints
 //
-//type : 
+and type_ = asdf 
 //
 //      ( type )
 //
@@ -925,29 +938,24 @@ and module_elems = |ME of module_elem list
 //
 // 
 //
-//typar :
-//
-//      _                   
-//
-//      'ident        
-//
-//      ^ident        
+and typar =
+|Underscore of underscore
+|[<Prefixc(''')>]PrimedId of ident
+|[<Prefixc('^')>]CaretId of ident
 //
 // 
 //
-//constraint : 
+and constraint_ =
+|Downcast of typar * dcop * type_
+|Null of typar * colon * null_w
+|ST of static_typars * colon * open_brack*member_sig*close_brack
+|New of typar * colon * open_brack * new_w * colon * unit_w * goesto * typar * close_brack
+|Struct of typar * colon * struct_w
+|NStruct of typar * colon * not_w * struct_w
+|Enum of typar * colon * enum_w * lessthan * type_w * greaterthan
+|Unman of typar * colon * unmanaged_w
+|Delegate of typar * colon * delegate_w * lessthan * type_ * comma * type_ * greaterthan
 //
-//      typar :> type 
-//
-//      typar : null  
-//
-//      static-typars : (member-sig )      
-//
-//      typar : (new : unit -> 'T) 
-//
-//      typar : struct
-//
-//      typar : not struct
 //
 //      typar : enum<type>
 //
@@ -957,15 +965,9 @@ and module_elems = |ME of module_elem list
 //
 // 
 //
-//typar-defn : attributesopt typar
-//
-// 
-//
-//typar-defns  : < typar-defn, ..., typar-defn typar-constraintsopt >
-//
-// 
-//
-//typar-constraints : when constraint and ... and constraint
+and typar_defn = |TD of Option<attributes> * typar  
+and typar_defns = |TDs of lessthan * typar_defn * List<comma * typar_defn> * Option<typar_constraints> * greaterthan  
+and typar_constraints = |TC of when_w * constraint_ * List<and_w * constraint_> 
 //
 // 
 //
@@ -1131,9 +1133,8 @@ and module_elems = |ME of module_elem list
 //
 //    value-defn
 //
-//function-defn :
-//
-//    inlineopt accessopt ident-or-op typar-defnsopt argument-pats return-typeopt = expr
+and function_defn =
+|FD of Option<inline_w> * Option<access> * ident_or_op *  Option<typar_defns> * argument_pats * Option<return_type> * equals *  expr
 //
 //value-defn :
 //
@@ -1895,7 +1896,7 @@ and module_elems = |ME of module_elem list
 //
 // 
 //
-//attributes : attribute-set ... attribute-set
+and attributes = |Attr_set of Plus<attribute_set> 
 //
 // 
 //
