@@ -65,8 +65,9 @@ type long_ident = |LI of ident * ((_dotchar * ident) list)
 //      ident-or-op
 //
 //A.1.4.3     Keywords
-//for generating these the following awk is useful  awk '{printf("|[<Prefixs(\"%s\")>] %s\n" ,$0,$0)}'
-type ident_keywork = 
+(*for generating these the following awk is useful  awk '{printf("|[<Prefixs(\"%s\")>] %s\n" ,$0,$0)}' *)
+
+type abstract_w = 
     |[<Prefixs("abstract")>] Abstract
     |[<Prefixs("and")>] And
     |[<Prefixs("as")>] As
@@ -98,12 +99,18 @@ type ident_keywork =
     |[<Prefixs("interface")>] Interface
     |[<Prefixs("internal")>] Internal
     |[<Prefixs("lazy")>] Lazy
+type let_w =
     |[<Prefixs("let")>] Let
+type match_w = 
     |[<Prefixs("match")>] Match
     |[<Prefixs("member")>] Member
+type module_w =
     |[<Prefixs("module")>] Module
+type mutable_w = 
     |[<Prefixs("mutable")>] Mutable
+type namespace_w =
     |[<Prefixs("namespace")>] Namespace
+type new_w = 
     |[<Prefixs("new")>] New
     |[<Prefixs("null")>] Null
     |[<Prefixs("of")>] Of
@@ -637,13 +644,10 @@ type reserved_ident_keyword =
 //
 //A.2.1     Program Format
 //
-//implementation-file :
-//
-//      namespace-decl-group ... namespace-decl-group
-//
-//      named-module
-//
-//      anonynmous-module
+type implementation_file =
+|NDL of Plus<namespace_decl_group>     
+//|NM of named_module
+//|AM of anonynmous_module
 //
 // 
 //
@@ -681,9 +685,8 @@ type reserved_ident_keyword =
 //
 //A.2.1.1     Namespaces and Modules
 //
-//namespace-decl-group :
-//
-//      namespace long-ident module-elems
+and namespace_decl_group =
+|NamespaceLocal of  namespace_w* long_ident * module_w * module_elems
 //
 //      namespace global module-elems
 //
@@ -697,9 +700,8 @@ type reserved_ident_keyword =
 //
 // 
 //
-//module-elem :
-//
-//      module-function-or-value-defn
+and module_elem =
+    |MFVD of  module_function_or_value_defn
 //
 //      type-defns
 //
@@ -715,9 +717,9 @@ type reserved_ident_keyword =
 //
 // 
 //
-//module-function-or-value-defn :
+and module_function_or_value_defn =
 //
-//      attributesopt let function-defn
+|LetF of      attributesopt * let_w * function_defn
 //
 //      attributesopt let value-defn
 //
@@ -739,7 +741,7 @@ type reserved_ident_keyword =
 //
 // 
 //
-//module-elems : module-elem ... module-elem
+and module_elems = |ME of module_elem list 
 //
 // 
 //
