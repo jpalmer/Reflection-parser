@@ -84,6 +84,7 @@ type delegate_w =
     |[<Prefixs("end")>] End
     |[<Prefixs("exception")>] Exception
     |[<Prefixs("extern")>] Extern
+type false_w =
     |[<Prefixs("false")>] False
     |[<Prefixs("finally")>] Finally
     |[<Prefixs("for")>] For
@@ -136,6 +137,7 @@ type struct_w =
     |[<Prefixs("struct")>] Struct
     |[<Prefixs("then")>] Then
     |[<Prefixs("to")>] To
+type true_w =
     |[<Prefixs("true")>] True
     |[<Prefixs("try")>] Try
 type type_w =
@@ -166,6 +168,21 @@ type enum_w =
     |[<Prefixs("enum")>] Enum
 type unmanaged_w = 
     |[<Prefixs("unmanaged")>] Unmanaged
+type assembly_w = 
+    |[<Prefixs("assembly")>] Unmanaged
+type return_w = 
+    |[<Prefixs("return")>] Unmanaged
+type field_w = 
+    |[<Prefixs("field")>] Unmanaged
+type property_w = 
+    |[<Prefixs("property")>] Unmanaged
+type param_w = 
+    |[<Prefixs("param")>] Unmanaged
+type constructor_w = 
+    |[<Prefixs("constructor")>] Unmanaged
+type event_w = 
+    |[<Prefixs("event")>] Unmanaged
+
 
 type reserved_ident_keyword =
     |[<Prefixs("atomic")>] Atomic
@@ -207,7 +224,11 @@ type reserved_ident_keyword =
 //
 type equals = |[<Prefixc('=')>]Dummy
 type open_brack = |[<Prefixc('(')>]Dummy
+type open_square = |[<Prefixc('[')>]Dummy
+type open_curly = |[<Prefixc('{')>]Dummy
 type close_brack = |[<Prefixc(')')>]Dummy
+type close_square = |[<Prefixc(']')>]Dummy
+type close_curly = |[<Prefixc('}')>]Dummy
 type star = |[<Prefixc('*')>]Dummy
 type pipe = |[<Prefixc('|')>]Dummy
 type underscore = |[<Prefixc('_')>]Dummy
@@ -226,7 +247,10 @@ type tilde = |[<Prefixc( '~')>]Dummy
 type greaterthan = |[<Prefixc( '>')>]Dummy
 type comma = |[<Prefixc( ',')>]Dummy
 type colon = |[<Prefixc( ':')>]Dummy
+type semicolon = |[<Prefixc( ';')>]Dummy
 type quote = |[<Prefixc( ''')>]Dummy
+type dquote = |[<Prefixc( '"')>]Dummy
+type hash = |[<Prefixc( '#')>]Dummy
 
 
 type doubledot = |[<Prefixs("..")>]Dummy
@@ -266,39 +290,19 @@ type colonquest = |[<Prefixs(":?")>]Dummy
 //
 // 
 //
-//unicodegraph-short : '\' 'u' hexdigit hexdigit hexdigit hexdigit
-//
-// 
-//
-//unicodegraph-long :  '\' 'U' hexdigit hexdigit hexdigit hexdigit
-//
-//                             hexdigit hexdigit hexdigit hexdigit
-//
-// 
-//
+and uchar = |[<Prefixc('u')>] Dummy 
+and Uchar = |[<Prefixc('U')>] Dummy
+and Bchar = |[<Prefixc('B')>] Dummy
+and unicodegraph_short = |Ugraphshort of slash * uchar *hexdigit*hexdigit *hexdigit*hexdigit 
+and unicodegraph_long =  |Ugraphlong of  slash * Uchar * hexdigit*hexdigit * hexdigit*hexdigit* hexdigit*hexdigit* hexdigit*hexdigit 
+//FIXME: not in spec
+and trigraph = TG of slash * digit_char * digit_char * digit_char
 and char_char = |SCC of simple_char_char |EC of escape_char |Trgr of trigraph |Unicode_short of unicodegraph_short
-//
+and string_char =
+|SSC of simple_string_char |EC of escape_char   |NEC of non_escape_char |Trgr of trigraph
+|UCG_short of unicodegraph_short                |UCG_long of unicodegraph_long
+|Newline of newline
 
-//
-// 
-//
-//string-char :
-//
-//      simple-string-char
-//
-//      escape-char
-//
-//      non-escape-chars
-//
-//      trigraph
-//
-//      unicodegraph-short
-//
-//      unicodegraph-long
-//
-//      newline
-//
-// 
 //
 //string-elem :
 //
@@ -312,32 +316,16 @@ and char_ = |Char of quote * char_char * quote
 //
 // 
 //
-//string : " string-char* "
+and string_ = |String of dquote * List<string_char> * dquote 
 //
 // 
 //
-//verbatim-string-char :
-//
-//      simple-string-char
-//
-//      non-escape-chars
-//
-//      newline
-//
-//      \
-//
-//      ""
-//
-// 
-//
-//verbatim-string : @" verbatim-string-char* "
-//
-// 
-//
-//bytechar           :  ' simple-or-escape-char 'B
-//
-// 
-//
+and verbatim_string_char =
+|SSC of simple_string_char |NEC of non_escape_chars
+|NL of newline             |Slash of slash
+|DDquote of dquote * dquote
+and verbatim_string = VS of at * dquote * List<verbatim_string_char> * dquote 
+and bytechar = |BC of quote * simple_or_escape_char * quote * Bchar
 //bytearray          :  " string-char* "B
 //
 // 
@@ -823,55 +811,28 @@ and access =
 //
 //A.2.2      Types and Type Constraints
 //
-and type_ = asdf 
-//
-//      ( type )
-//
-//      type -> type  
-//
-//      type * ... * type   
-//
-//      typar         
-//
-//      long-ident      
-//
-//      long-ident<types>
-//
-//      long-ident< >  
-//
-//      type long-ident     
-//
-//      type[ , ... , ]     
-//
-//      type lazy           
-//
-//      type typar-defns    
-//
-//      typar :> type 
-//
-//      #type         
-//
-// 
-//
-//types :  type, ..., type
-//
-// 
-//
-//atomic-type :
-//
-//      type : one of  
-//
-//              #type typar ( type ) long-ident long-ident<types>)
-//
-// 
-//
+and type_ =
+|Arrow of type_ * goesto * type_
+|Tuple of type_ * List<star * type_>
+|LIGB of long_ident * lessthan * greaterthan //TODO: should this have an _ in it??
+|TLI of type_ * long_ident
+|TA of type_ * open_square * List<comma> * close_square
+|TL of type_ * lazy_w
+|TTydefs of type_ * typar_defns
+|DC of typar * dcop * type_
+|AT of atomic_type
+and types = |Tlist of type_ * List<comma * type_> 
+//some things moved into here
+and atomic_type = //TODO: the spec has unbalanced brackets here
+|Hasht of hash * type_
+|Typar of typar
+|Brack of open_brack  * type_ * close_brack
+|LI of long_ident
+|LIG of long_ident * lessthan * types * greaterthan
 and typar =
 |Underscore of underscore
 |[<Prefixc(''')>]PrimedId of ident
 |[<Prefixc('^')>]CaretId of ident
-//
-// 
-//
 and constraint_ =
 |Downcast of typar * dcop * type_
 |Null of typar * colon * null_w
@@ -882,14 +843,9 @@ and constraint_ =
 |Enum of typar * colon * enum_w * lessthan * type_w * greaterthan
 |Unman of typar * colon * unmanaged_w
 |Delegate of typar * colon * delegate_w * lessthan * type_ * comma * type_ * greaterthan
-
-
 and typar_defn = |TD of Option<attributes> * typar  
 and typar_defns = |TDs of lessthan * typar_defn * List<comma * typar_defn> * Option<typar_constraints> * greaterthan  
 and typar_constraints = |TC of when_w * constraint_ * List<and_w * constraint_> 
-//
-// 
-//
 and static_typars =
 |Ident  of caret * ident
 |Multi of open_brack * caret * ident * List<or_w*caret*ident> * close_brack
@@ -1081,11 +1037,9 @@ and argument_pats= Plus<atomic_pat>
 //
 // 
 //
-//object-construction :
-//
-//      type expr
-//
-//      type
+and object_construction =
+|TE of type_ * expr
+|T of type_
 //
 // 
 //
@@ -1271,26 +1225,13 @@ and pat = //some of these moved into atomic_pat
 |Atomic_pat of atomic_pat
 // 
 //
-//list-pat :
-//
-//      [ ]
-//
-//      [ pat ; ... ; pat ]
-//
-// 
-//
-//array-pat :
-//
-//      [| |]
-//
-//      [| pat ; ... ; pat |]
-//
-// 
-//
-//record-pat : { field-pat ; ... ; field-pat }
-//
-// 
-//
+and list_pat =
+|Empty of open_square * close_square
+|List of open_square * pat * List<semicolon*pat> * close_square
+and array_pat =
+|Empty of open_square * pipe*pipe *close_square
+|List of open_square*pipe * pat * List<semicolon*pat> * pipe * close_square
+and record_pat = |RP of open_curly * field_pat * List<semicolon*field_pat> * close_curly 
 and atomic_pat =
 |Const of const_
 |Li of long_ident * Option<pat_param> * Option<pat>
@@ -1310,16 +1251,7 @@ and atomic_pat =
 //            :? atomic-type 
 //
 //                       null  _ _
-//
-// 
-//
-// 
-//
-// 
-//
-//field-pat : long-ident = pat
-//
-// 
+and field_pat = FP of long_ident * equals * pat 
 //
 //pat-param :
 //
@@ -1591,30 +1523,24 @@ and atomic_pat =
 //
 and member_sig =
 //
-|NoGetSet of  ident *  Option<typar_defns> *colonv *  curried_sig
-|Get of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * get_w
-|Set of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * set_w
-|GetSet of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * get_w * comma * set_w
-|SetGet of  ident *  Option<typar_defns> *colonv *  curried_sig * with_w * set_w * comma * get_w
+|NoGetSet of  ident *  Option<typar_defns> *colon *  curried_sig
+|Get of  ident *  Option<typar_defns> *colon *  curried_sig * with_w * get_w
+|Set of  ident *  Option<typar_defns> *colon*  curried_sig * with_w * set_w
+|GetSet of  ident *  Option<typar_defns> *colon *  curried_sig * with_w * get_w * comma * set_w
+|SetGet of  ident *  Option<typar_defns> *colon *  curried_sig * with_w * set_w * comma * get_w
 // 
 //
-//curried-sig : args-spec -> ... -> args-spec -> type
+and curried_sig = args_spec * List<goesto * args_spec> * type_ 
 //
 // 
 //
 //uncurried-sig : args-spec -> type
+and args_spec = arg_spec * List<star * arg_spec> 
+and arg_spec  = Option<attributes> * Option<arg_name_spec> * type_
 //
 // 
 //
-//args-spec : arg-spec * ... * arg-spec
-//
-// 
-//
-//arg-spec : attributesopt arg-name-specopt type
-//
-// 
-//
-//arg-name-spec : ?opt ident :
+and arg_name_spec = Option<question> * ident * colon
 //
 // 
 //
@@ -1777,38 +1703,21 @@ and measure_literal =
 //
 //A.2.7      Custom Attributes and Reflection
 //
-//attribute : attribute-target:opt object-construction
-//
-// 
-//
-//attribute-set : [< attribute ; ... ; attribute >]
-//
-// 
-//
-and attributes = |Attr_set of Plus<attribute_set> 
-//
-// 
-//
-//attribute-target :
-//
-//      assembly
-//
-//      module
-//
-//      return
-//
-//      field
-//
-//      property
-//
-//      param
-//
-//      type
-//
-//      constructor
-//
-//      event
-//
+//TODO: def here is unclear
+and attribute = Option<attribute_target> *  object_construction
+and attribute_set = open_square * lessthan * attribute * List<semicolon * attribute> * greaterthan * close_square 
+and attributes = Plus<attribute_set> 
+and attribute_target =
+|Assembly of assembly_w
+|Module of module_w
+|Return of return_w
+|Field of field_w
+|Property of property_w
+|Param of param_w
+|Type of type_w
+|Constructor of constructor_w
+|Event of event_w
+
 //A.2.8      Compiler Directives
 //
 //Compiler directives in non-nested modules or namespace declaration groups:
