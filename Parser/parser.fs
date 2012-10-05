@@ -1,15 +1,17 @@
 module parser
 open Microsoft.FSharp.Reflection
 open Attributes
-//TODO: Add support for option types
+//TODO: SEPERATOR BETWEEN LIST ELEMENTS
+//TODO: Add support for option types - Done - just need to check
 //TODO: When parsing a tuple allow for whitespace between elements - could grab it from grammar.Whitespace
 let grammartypes = FSharpType.GetUnionCases(typeof<grammar.Main>)
 type SomeFail<'t> = 
     |SSome of 't
     |NNone
     |Fail
-let (|OtherL|FSUnion|FSTuple|Other|) (t:System.Type) =
-    if t.IsGenericType && t.GetGenericTypeDefinition() =[].GetType().GetGenericTypeDefinition() then OtherL(t.GetGenericArguments())
+let (|OtherL|FSOption|FSUnion|FSTuple|Other|) (t:System.Type) =
+    if      t.IsGenericType && t.GetGenericTypeDefinition() =[].GetType().GetGenericTypeDefinition() then OtherL(t.GetGenericArguments())
+    else if t.IsGenericType && t.GetGenericTypeDefinition() =None.GetType().GetGenericTypeDefinition() then FSOption(t.GetGenericArguments())
     else if Microsoft.FSharp.Reflection.FSharpType.IsUnion t then FSUnion
     else if Microsoft.FSharp.Reflection.FSharpType.IsTuple t then FSTuple
     else Other(t)
@@ -67,7 +69,7 @@ let rec getTypeList elemtypes text index :obj*int=
     let res = getTuple (FSharpType.MakeTupleType(elemtypes)) text index
     let listtype = typeof<List<_>>.GetGenericTypeDefinition() 
     let genericListType = listtype.MakeGenericType(listelemtype)
-    if !worked then 
+    if !worked then //If we got one element there might be more - 
         let newr,newind = getTypeList elemtypes text !indref
         let newres = genericListType.GetMethod("Cons").Invoke(null,[|res;newr|])
         newres,newind
@@ -99,6 +101,11 @@ and getType t text index :bool*obj option *int=
     |OtherL(subt) ->
          let r,newind = getTypeList subt text index
          true,Some(r),newind
+    |FSOption(optt) -> 
+        let worked,res,dex = getTuple t text index
+        match worked with //this may need to be fixed for correct genericness
+        |true -> true,Some(Some(res)),dex
+        |false -> true,Some(None),dex
     |FSUnion ->
         let worked,res,dex = parse text (FSharpType.GetUnionCases(t)) index
         worked,Some(res|>box),dex
