@@ -1,4 +1,5 @@
 module grammar 
+open GrammarConst
 open Attributes
 open System.Globalization
 //A.1 Lexical Grammar
@@ -51,255 +52,45 @@ type ident = |IT of ident_text //the spec has some weird stuff here - but this i
 type _dotchar = |[<Prefixc('.')>]Dotchar
 type _ident_dot = |Ident_dot of ident * _dotchar
 type long_ident = |LI of ident * ((_dotchar * ident) list)
-//
-//
-//long-ident-or-op : 
-//
-//      long-ident '.' ident-or-op
-//
-//      ident-or-op
-//
-//A.1.4.3     Keywords
-(*for generating these the following awk is useful  awk '{printf("|[<Prefixs(\"%s\")>] %s\n" ,$0,$0)}' *)
-
-type abstract_w = 
-    |[<Prefixs("abstract")>] Abstract
-type and_w =
-    |[<Prefixs("and")>] And
-type as_w = 
-    |[<Prefixs("as")>] As
-    |[<Prefixs("assert")>] Assert
-    |[<Prefixs("base")>] Base
-    |[<Prefixs("begin")>] Begin
-    |[<Prefixs("class")>] Class
-    |[<Prefixs("default")>] Default
-type delegate_w = 
-    |[<Prefixs("delegate")>] Delegate
-    |[<Prefixs("do")>] Do
-    |[<Prefixs("done")>] Done
-    |[<Prefixs("downcast")>] Downcast
-    |[<Prefixs("downto")>] Downto
-    |[<Prefixs("elif")>] Elif
-    |[<Prefixs("else")>] Else
-    |[<Prefixs("end")>] End
-    |[<Prefixs("exception")>] Exception
-    |[<Prefixs("extern")>] Extern
-type false_w =
-    |[<Prefixs("false")>] False
-    |[<Prefixs("finally")>] Finally
-    |[<Prefixs("for")>] For
-    |[<Prefixs("fun")>] Fun
-    |[<Prefixs("function")>] Function
-    |[<Prefixs("global")>] Global
-    |[<Prefixs("if")>] If
-    |[<Prefixs("in")>] In
-    |[<Prefixs("inherit")>] Inherit
-type inline_w =
-    |[<Prefixs("inline")>] Inline
-type interface_w = 
-    |[<Prefixs("interface")>] Interface
-type internal_w = 
-    |[<Prefixs("internal")>] Internal
-type lazy_w = 
-    |[<Prefixs("lazy")>] Lazy
-type let_w =
-    |[<Prefixs("let")>] Let
-type match_w = 
-    |[<Prefixs("match")>] Match
-    |[<Prefixs("member")>] Member
-type module_w =
-    |[<Prefixs("module")>] Module
-type mutable_w = 
-    |[<Prefixs("mutable")>] Mutable
-type namespace_w =
-    |[<Prefixs("namespace")>] Namespace
-type new_w = 
-    |[<Prefixs("new")>] New
-type null_w =
-    |[<Prefixs("null")>] Null
-type of_w =
-    |[<Prefixs("of")>] Of
-type open_w =
-    |[<Prefixs("open")>] Open
-type or_w = 
-    |[<Prefixs("or")>] Or
-    |[<Prefixs("override")>] Override
-type private_w =
-    |[<Prefixs("private")>] Private
-type public_w = 
-    |[<Prefixs("public")>] Public
-type rec_w = 
-    |[<Prefixs("rec")>] Rec
-    |[<Prefixs("return")>] Return
-    |[<Prefixs("sig")>] Sig
-    |[<Prefixs("static")>] Static
-type struct_w =
-    |[<Prefixs("struct")>] Struct
-    |[<Prefixs("then")>] Then
-    |[<Prefixs("to")>] To
-type true_w =
-    |[<Prefixs("true")>] True
-    |[<Prefixs("try")>] Try
-type type_w =
-    |[<Prefixs("type")>] Type
-    |[<Prefixs("upcast")>] Upcast
-    |[<Prefixs("use")>] Use
-    |[<Prefixs("val")>] Val
-    |[<Prefixs("void")>] Void
-type when_w =
-    |[<Prefixs("when")>] When
-type while_w = 
-    |[<Prefixs("while")>] While
-type with_w = 
-    |[<Prefixs("with")>] With
-type yield_w = 
-    |[<Prefixs("yield")>] Yield
-
-//these are not in the spec - but add in anyway
-type set_w = 
-    |[<Prefixs("set")>] Set
-type get_w = 
-    |[<Prefixs("get")>] Get
-type not_w = 
-    |[<Prefixs("not")>] Not
-type unit_w = 
-    |[<Prefixs("unit")>] Unit
-type enum_w = 
-    |[<Prefixs("enum")>] Enum
-type unmanaged_w = 
-    |[<Prefixs("unmanaged")>] Unmanaged
-type assembly_w = 
-    |[<Prefixs("assembly")>] Unmanaged
-type return_w = 
-    |[<Prefixs("return")>] Unmanaged
-type field_w = 
-    |[<Prefixs("field")>] Unmanaged
-type property_w = 
-    |[<Prefixs("property")>] Unmanaged
-type param_w = 
-    |[<Prefixs("param")>] Unmanaged
-type constructor_w = 
-    |[<Prefixs("constructor")>] Unmanaged
-type event_w = 
-    |[<Prefixs("event")>] Unmanaged
+type long_ident_or_op =
+|Dotted of long_ident * dot * ident_or_op
+|IOO of ident_or_op
 
 
-type reserved_ident_keyword =
-    |[<Prefixs("atomic")>] Atomic
-    |[<Prefixs("break")>] Break
-    |[<Prefixs("checked")>] Checked
-    |[<Prefixs("component")>] Component
-    |[<Prefixs("const")>] Const
-    |[<Prefixs("constraint")>] Constraint
-    |[<Prefixs("constructor")>] Constructor
-    |[<Prefixs("continue")>] Continue
-    |[<Prefixs("eager")>] Eager
-    |[<Prefixs("fixed")>] Fixed
-    |[<Prefixs("fori")>] Fori
-    |[<Prefixs("functor")>] Functor
-    |[<Prefixs("include")>] Include
-    |[<Prefixs("measure")>] Measure
-    |[<Prefixs("method")>] Method
-    |[<Prefixs("mixin")>] Mixin
-    |[<Prefixs("object")>] Object
-    |[<Prefixs("parallel")>] Parallel
-    |[<Prefixs("params")>] Params
-    |[<Prefixs("process")>] Process
-    |[<Prefixs("protected")>] Protected
-    |[<Prefixs("pure")>] Pure
-    |[<Prefixs("recursive")>] Recursive
-    |[<Prefixs("sealed")>] Sealed
-    |[<Prefixs("tailcall")>] Tailcall
-    |[<Prefixs("trait")>] Trait
-    |[<Prefixs("virtual")>] Virtual
-    |[<Prefixs("volatile")>] Volatile
-
-// 
-//
-//reserved-ident-formats :
-//
-//      ident-text ( '!' | '#')
-//
-//A.1.4.4     Symbolic Keywords
-//
-type equals = |[<Prefixc('=')>]Dummy
-type open_brack = |[<Prefixc('(')>]Dummy
-type open_square = |[<Prefixc('[')>]Dummy
-type open_curly = |[<Prefixc('{')>]Dummy
-type close_brack = |[<Prefixc(')')>]Dummy
-type close_square = |[<Prefixc(']')>]Dummy
-type close_curly = |[<Prefixc('}')>]Dummy
-type star = |[<Prefixc('*')>]Dummy
-type pipe = |[<Prefixc('|')>]Dummy
-type underscore = |[<Prefixc('_')>]Dummy
-type question = |[<Prefixc('?')>]Dummy
-type lessthan = |[<Prefixc('<')>]Dummy
-type dash = |[<Prefixc('-')>]Dummy
-type bang = |[<Prefixc( '!')>]Dummy
-type percent = |[<Prefixc( '%')>]Dummy
-type amp = |[<Prefixc( '&')>]Dummy
-type plus = |[<Prefixc( '+')>]Dummy
-type dot = |[<Prefixc( '.')>]Dummy
-type slash = |[<Prefixc( '/')>]Dummy
-type at = |[<Prefixc( '@')>]Dummy
-type caret = |[<Prefixc( '^')>]Dummy
-type tilde = |[<Prefixc( '~')>]Dummy
-type greaterthan = |[<Prefixc( '>')>]Dummy
-type comma = |[<Prefixc( ',')>]Dummy
-type colon = |[<Prefixc( ':')>]Dummy
-type semicolon = |[<Prefixc( ';')>]Dummy
-type quote = |[<Prefixc( ''')>]Dummy
-type dquote = |[<Prefixc( '"')>]Dummy
-type hash = |[<Prefixc( '#')>]Dummy
-
-
-type doubledot = |[<Prefixs("..")>]Dummy
-type dcop = |[<Prefixs(":>")>]Dummy
-type goesto = |[<Prefixs("->")>]Dummy
-type cons = |[<Prefixs("::")>]Dummy
-type colonquest = |[<Prefixs(":?")>]Dummy
-//symbolic-keyword : one of
-//
-//      let! use! do! yield! return!
-//
-//      | -> <- . : ( ) [ ] [< >] [| |] { }
-//
-//      ' # :?> :? :> .. :: := ;; ; =
-//
-//      _ ? ?? (*) <@ @> <@@ @@>
-//
-// 
-//
-//reserved-symbolic-sequence :
-//
-//      ~ `
 //
 //A.1.5      Strings and Characters
 //
-//escape-char :  '\' ["\'ntbr]
-//
-// 
-//
-//non-escape-chars :  '\' [^"\'ntbr]
-//
-// 
-//
-//simple-char-char : any char except
-//
-//      '\n' '\t' '\r' '\b' ' \ "
-//
-// 
-//
+and nchar = |[<Prefixc('n')>] Dummy
+and tchar = |[<Prefixc('t')>] Dummy
+and bchar = |[<Prefixc('b')>] Dummy
+and rchar = |[<Prefixc('r')>] Dummy
+and startescape = |[<Prefixc('\\')>] Dummy
+and escape_char =
+|[<Prefixc('\\')>] Dquote of dquote
+|[<Prefixc('\\')>] Slash of slash
+|[<Prefixc('\\')>] Quote of quote
+|[<Prefixc('\\')>] N of nchar
+|[<Prefixc('\\')>] T of tchar
+|[<Prefixc('\\')>] B of bchar
+|[<Prefixc('\\')>] R of rchar
+
+
+and non_escape_chars =
+|[<NotPrefixc([|'"';'\\';''';'n';'t';'b';'r'|]); Anychar>] NEC of char
+//TODO:in the spec double quote " is not allowed in simple char char but this is incorrect
+and simple_char_char = |[<NotPrefixc([|'\n'; '\t'; '\r'; '\b' ;''';'\\'|]);Anychar>] SCC of char 
+//TODO:assumed def - not in spec
+and simple_string_char = |[<NotPrefixc([|'\n'; '\t'; '\r'; '\b' ;'"';'\\'|]);Anychar>] SCC of char 
 and uchar = |[<Prefixc('u')>] Dummy 
 and Uchar = |[<Prefixc('U')>] Dummy
 and Bchar = |[<Prefixc('B')>] Dummy
-and unicodegraph_short = |Ugraphshort of slash * uchar *hexdigit*hexdigit *hexdigit*hexdigit 
-and unicodegraph_long =  |Ugraphlong of  slash * Uchar * hexdigit*hexdigit * hexdigit*hexdigit* hexdigit*hexdigit* hexdigit*hexdigit 
+and unicodegraph_short = slash * uchar *hexdigit*hexdigit *hexdigit*hexdigit 
+and unicodegraph_long =  slash * Uchar * hexdigit*hexdigit * hexdigit*hexdigit* hexdigit*hexdigit* hexdigit*hexdigit 
 //FIXME: not in spec
-and trigraph = TG of slash * digit_char * digit_char * digit_char
+and trigraph = slash * digit_char * digit_char * digit_char
 and char_char = |SCC of simple_char_char |EC of escape_char |Trgr of trigraph |Unicode_short of unicodegraph_short
 and string_char =
-|SSC of simple_string_char |EC of escape_char   |NEC of non_escape_char |Trgr of trigraph
+|SSC of simple_string_char |EC of escape_char   |NEC of non_escape_chars |Trgr of trigraph
 |UCG_short of unicodegraph_short                |UCG_long of unicodegraph_long
 |Newline of newline
 
@@ -312,39 +103,18 @@ and string_char =
 //
 // 
 //
-and char_ = |Char of quote * char_char * quote 
-//
-// 
-//
-and string_ = |String of dquote * List<string_char> * dquote 
-//
-// 
-//
+and char_ = quote * char_char * quote 
+and string_ = dquote * List<string_char> * dquote 
 and verbatim_string_char =
 |SSC of simple_string_char |NEC of non_escape_chars
 |NL of newline             |Slash of slash
 |DDquote of dquote * dquote
 and verbatim_string = VS of at * dquote * List<verbatim_string_char> * dquote 
-and bytechar = |BC of quote * simple_or_escape_char * quote * Bchar
-//bytearray          :  " string-char* "B
-//
-// 
-//
+//TODO: this is different to the spec - but makes more sense
+//TODO: in FSI, the B must be next to the quote - no whitespace
+and bytechar =  quote * char_char * quote * Bchar
+and bytearray = dquote * List<string_char> * dquote * Bchar
 //verbatim-bytearray : @" verbatim-string-char* "B
-//
-// 
-//
-//simple-or-escape-char :
-//
-//      escape-char
-//
-//      simple-char
-//
-// 
-//
-//simple-char : any char except
-//
-//      newline, return, tab, backspace,',\,"
 //
 //A.1.6      Numeric Literals
 //
@@ -362,13 +132,7 @@ and octaldigit =
 |[<Prefixc('0')>] D0 |[<Prefixc('1')>] D1 |[<Prefixc('2')>] D2 |[<Prefixc('3')>] D3 
 |[<Prefixc('4')>] D4 |[<Prefixc('5')>] D5 |[<Prefixc('6')>] D6 |[<Prefixc('7')>] D7 
 and bitdigit = |[<Prefixc('0')>] D0 |[<Prefixc('1')>] D1
-//
-// 
-//
 and int_ =  Plus<digit>
-//
-// 
-//
 and zerochar = |[<Prefixc('0')>] Dummy
 and xXchar = |[<Prefixc('X')>] Dummy|[<Prefixc('x')>] Dummy2
 and oOchar = |[<Prefixc('O')>] Dummy|[<Prefixc('o')>] Dummy2
@@ -398,40 +162,26 @@ and int16_ =    |Int16 of   xint * schar
 and uint16_ =   |Uint16 of  xint * uschar 
 and int32_ =    |Int32 of   xint * lchar
 and eEchar =  |[<Prefixc('E')>] Dummy|[<Prefixc('e')>] Dummy2
+and mMchar =  |[<Prefixc('M')>] Dummy|[<Prefixc('m')>] Dummy2
 and pmchar =  |[<Prefixc('+')>] Plus|[<Prefixc('-')>] Minus
+and ul_or_uchar =  |[<Prefixc('u')>] Dummy|[<Prefixs("ul")>] Dummy2
 and bignumId = 
 |[<Prefixc('Q')>] Dummy  |[<Prefixc('R')>] Dummy2 |[<Prefixc('Z')>] Dummy3
 |[<Prefixc('I')>] Dummy4 |[<Prefixc('N')>] Dummy5 |[<Prefixc('G')>] Dummy6
 
-//uint32 :
-//
-//      xint 'ul'
-//
-//      xint 'u'
-//
-// 
-//
+and uint32_ = |Uint32 of xint * ul_or_uchar
 //nativeint : xint 'n'
 //unativeint : xint 'un'
-and int64_ =    |Int64 of   xint * Lchar
+and int64_ =    xint * Lchar
 and uint64_ =   |Uint64 of  xint * ULchar 
                 |Uint64_ of xint * uLchar
 and ieee32 =    |Float of   float_ * Fchar
                 |Float_ of  float_ * fchar
                 |Fint of    xint * lfchar
-// 
-//
 and ieee64 =    |Float of   float_
                 |Fint of    xint * LFchar
-
 and bignum = int_ * bignumId 
-//
-// 
-//
-//decimal : (float|int) [Mm]
-//
-// 
-//
+and decimal_ = |FD of float_ * mMchar |ID of int_ * mMchar
 and float_ =
 |Dec of Plus<digit> * dot * List<digit>
 |Decl of Plus<digit> * Option<dot * List<digit>> * eEchar * Option<pmchar> * List<digit>
@@ -466,7 +216,7 @@ and float_ =
 //
 //A.1.9.1     Operator Names
 //
-type ident_or_op =
+and ident_or_op =
 |Id of ident
 |ON of open_brack * op_name * close_brack
 |Star of open_brack * star * close_brack
@@ -516,15 +266,16 @@ and symbolic_op =
 //
 //The OP marker represents all symbolic-op tokens that begin with the indicated prefix, except for tokens that appear elsewhere in the table.
 //
-//infix-or-prefix-op : one of
-//
-//      +,  -, +., -., %, &, &&
-//
-// 
-//
-//prefix-op :
-//
-//      infix-or-prefix-op
+and infix_or_prefix_op = 
+|Plus of plus
+|Dash of dash
+|Plusdot of plusdot
+|Minusdot of minusdot
+|Mod of percent
+|Amp of amp
+|AmpAmp of ampamp
+and prefix_op =
+|If of infix_or_prefix_op
 //
 //      ~ ~~ ~~~      (and any repetitions of ~)
 //
@@ -532,7 +283,8 @@ and symbolic_op =
 //
 // 
 //
-//infix-op :
+and infix_op =
+|Iop of infix_or_prefix_op
 //
 //      infix-or-prefix-op
 //
@@ -557,11 +309,11 @@ and measure_encased = lessthan * measure_literal * greaterthan
 //FIXME??? interesting - Decimal can't be without measure
 and const_ = 
 |Sbyte of sbyte_    |Int16 of int16_    |Int32 of int32_    |Int64 of int64_    |Byte of byte_      |Uint16 of uint16_ 
-|Uint32 of uint32   |Int of int_        |Uint64 of uint64_  |Ieee32 of ieee32   |Ieee64 of ieee64   |Bignum of bignum
-|Char of char_      |String of string_  |Verbatim_str of verbatim_string        |Bytestring of bytestring
+|Uint32 of uint32_  |Int of int_        |Uint64 of uint64_  |Ieee32 of ieee32   |Ieee64 of ieee64   |Bignum of bignum
+|Char of char_      |String of string_  |Verbatim_str of verbatim_string        |Bytestring of bytearray //in the spec this is bytestring - but bytestring appears nowhere else - so I assume it is meant to be bytesrting
 |Bytechar of bytechar                   |False of false_w   |True of true_w     |Unit of open_brack * close_brack
 |Sbytem of sbyte_ * measure_encased     |Int16m of int16_ * measure_encased     |Int32m of int32_ * measure_encased
-|Ieee32m of ieee32 * measure_encased    |Ieee64m of ieee64 * measure_encased    |Decimalm of decimal * measure_encased
+|Ieee32m of ieee32 * measure_encased    |Ieee64m of ieee64 * measure_encased    |Decimalm of decimal_ * measure_encased //TODO:no measure free decimal literal - bug?
 // 
 //
 //A.2 Syntactic Grammar
@@ -621,7 +373,6 @@ and implementation_file =
 //
 and namespace_decl_group =
 |NamespaceLocal of  namespace_w* long_ident * module_w * module_elems
-//
 //      namespace global module-elems
 //
 // 
@@ -675,7 +426,7 @@ and module_function_or_value_defn =
 //
 // 
 //
-and module_elems = |ME of module_elem list 
+and module_elems = List<module_elem>
 and access =
 |Private of private_w
 |Internal of internal_w
@@ -843,9 +594,9 @@ and constraint_ =
 |Enum of typar * colon * enum_w * lessthan * type_w * greaterthan
 |Unman of typar * colon * unmanaged_w
 |Delegate of typar * colon * delegate_w * lessthan * type_ * comma * type_ * greaterthan
-and typar_defn = |TD of Option<attributes> * typar  
-and typar_defns = |TDs of lessthan * typar_defn * List<comma * typar_defn> * Option<typar_constraints> * greaterthan  
-and typar_constraints = |TC of when_w * constraint_ * List<and_w * constraint_> 
+and typar_defn = Option<attributes> * typar  
+and typar_defns = lessthan * typar_defn * List<comma * typar_defn> * Option<typar_constraints> * greaterthan  
+and typar_constraints = when_w * constraint_ * List<and_w * constraint_> 
 and static_typars =
 |Ident  of caret * ident
 |Multi of open_brack * caret * ident * List<or_w*caret*ident> * close_brack
@@ -859,40 +610,24 @@ and static_typars =
 //
 //A.2.3      Expressions
 //
-//expr : 
-//
-//      const
-//
-//      ( expr )
-//
-//      begin expr end
-//
-//      long-ident-or-op
-//
-//      expr '.' long-ident-or-op
-//
-//      expr expr
-//
-//      expr(expr)
-//
-//      expr<types>
-//
-//      expr infix-op expr
-//
-//      prefix-op expr
-//
-//      expr.[expr]
-//
-//      expr.[slice-range]
-//
-//      expr.[slice-range, slice-range]
-//
-//      expr <- expr
-//
-//      expr , ... , expr
-//
-//      new type expr
-//
+and expr =
+|C              of const_
+|Brack          of open_brack * expr * close_brack
+|BE             of begin_w * expr * end_w
+|LIO            of long_ident_or_op
+|Dotted         of expr * dot * long_ident_or_op
+|Double         of expr * expr
+|Double_Brack   of expr * open_brack * expr * close_brack
+|Generic        of expr * lessthan * types * greaterthan
+|Infop          of expr * infix_op * expr
+|Prefof         of prefix_op * expr
+|Arrayaccess    of expr * dot * open_square * expr * close_square
+|Arrayslice     of expr * dot * open_square * slice_range * close_square
+|Doubleslice    of expr * dot * open_square * slice_range * comma * slice_range * close_square
+|Assign         of expr * goesto * expr
+|Tuple          of expr * List<comma * expr>
+|New            of new_w * type_ * expr
+
 //      { new base-call object-members interface-impls }
 //
 //      { field-initializers }
@@ -1005,8 +740,7 @@ and static_typars =
 //
 //    value-defn
 //
-and function_defn =
-|FD of Option<inline_w> * Option<access> * ident_or_op *  Option<typar_defns> * argument_pats * Option<return_type> * equals *  expr
+and function_defn = Option<inline_w> * Option<access> * ident_or_op *  Option<typar_defns> * argument_pats * Option<return_type> * equals *  expr
 //
 //value-defn :
 //
@@ -1014,7 +748,7 @@ and function_defn =
 //
 // 
 //
-and return_type = |Ret of colon * type_
+and return_type = colon * type_
 // 
 //
 //function-or-value-defns :
@@ -1109,15 +843,11 @@ and object_construction =
 //
 // 
 //
-//slice-range :
-//
-//      expr.. 
-//
-//      ..expr 
-//
-//      expr..expr
-//
-//      '*'
+and slice_range =
+|Enddot of expr * doubledot
+|Startdot of doubledot * expr
+|SE of expr * doubledot * expr
+|Star of star
 //
 //A.2.3.2     Computation Expressions
 //
@@ -1231,7 +961,7 @@ and list_pat =
 and array_pat =
 |Empty of open_square * pipe*pipe *close_square
 |List of open_square*pipe * pat * List<semicolon*pat> * pipe * close_square
-and record_pat = |RP of open_curly * field_pat * List<semicolon*field_pat> * close_curly 
+and record_pat = open_curly * field_pat * List<semicolon*field_pat> * close_curly 
 and atomic_pat =
 |Const of const_
 |Li of long_ident * Option<pat_param> * Option<pat>
@@ -1251,27 +981,17 @@ and atomic_pat =
 //            :? atomic-type 
 //
 //                       null  _ _
-and field_pat = FP of long_ident * equals * pat 
+and field_pat = long_ident * equals * pat 
 //
-//pat-param :
-//
-//      const
-//
-//      long-ident
-//
-//      [ pat-param ; ... ; pat-param ]
-//
-//      ( pat-param, ..., pat-param )
-//
-//      long-ident pat-param
-//
-//      pat-param : type
-//
-//      <@ expr @>
-//
-//      <@@ expr @@>
-//
-//      null
+and pat_param =
+|Const of const_
+|LI of long_ident
+|Arr of open_square * pat_param * List<semicolon * pat_param> * close_square
+|Tuple of open_brack * pat_param * List<comma * pat_param> * close_brack
+|LIP of long_ident * pat_param
+|DC of pat_param * colon * type_
+|CE of lessthan * quote_op_left * expr * quote_op_right //minor change to use operator defined elsewhere
+|Null of null_w
 //
 // 
 //
@@ -1591,45 +1311,19 @@ and arg_name_spec = Option<question> * ident * colon
 //default ident.ident pat1 ... patn = expr
 //
 //A.2.6      Units Of Measure
-//
-//measure-literal-atom :
-//
-//      long-ident
-//
-//      ( measure-literal-simp )
-//
-// 
-//
-//measure-literal-power :
-//
-//      measure-literal-atom
-//
-//      measure-literal-atom ^ int32
-//
-// 
-//
-//measure-literal-seq :
-//
-//      measure-literal-power
-//
-//      measure-literal-power measure-literal-seq
-//
-// 
-//
-//measure-literal-simp :
-//
-//      measure-literal-seq
-//
-//      measure-literal-simp * measure-literal-simp
-//
-//      measure-literal-simp / measure-literal-simp
-//
-//      / measure-literal-simp
-//
-//      1
-//
-// 
-//
+and measure_literal_atom =
+|LI of long_ident
+|Brack of open_brack * measure_literal_simp * close_brack
+//slightly different but better
+and measure_literal_power = |MLA of measure_literal_atom * Option<caret * int32_>
+//slightly different to spec - but simpler
+and measure_literal_seq = |MLP of measure_literal_power * Option<measure_literal_seq>
+and measure_literal_simp =
+|MLS of measure_literal_seq
+|Double of measure_literal_simp * star * measure_literal_simp
+|DoubleDiv of measure_literal_simp * slash * measure_literal_simp
+|Div of slash * measure_literal_simp
+|One of onechar
 and measure_literal =
 |Underscore of underscore
 |MLS of measure_literal_simp

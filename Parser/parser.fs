@@ -46,6 +46,13 @@ let checkprefixclass (t:UnionCaseInfo) text (index:int ref) =
             SSome(FSharpValue.MakeUnion(t,[|char:> obj|]))
         else Fail
     else NNone
+let grabAny (t:UnionCaseInfo) (text:char[]) (index:int ref) =
+    let prechar = t.GetCustomAttributes(typeof<Anychar>)
+    if prechar.Length = 1 then 
+        let char = text.[!index]
+        index := !index + 1;
+        Some(FSharpValue.MakeUnion(t,[|char:> obj|]))
+    else None
 let checkprefixs (t:UnionCaseInfo) text (index:int ref) =
     let prestr = t.GetCustomAttributes(typeof<Prefixs>)
     if prestr.Length = 1 then
@@ -132,31 +139,32 @@ and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
         if idx < text.Length then //this does some unnecersarry checks - can optimise if necersarry later
             checkprefix testcase text index && checkprefixs testcase text index && checkNotprefix testcase text index
         else false
-    if checkok then
-        match checkprefixclass testcase text index with
-        |SSome(t) -> Some(!index,t|>unbox)
-        |NNone ->
-            let success =
-                fields 
-                |> Array.mapi (fun i elem -> i,elem)
-                |> Array.fold (fun state (i,field) ->
-                    match state with
-                    |false -> false
-                    |true -> 
-                        let w,res,newind = getType (field.PropertyType) text !index
-                        index:=newind
-                        if w then result.[i]<-(res.Value)
-                        w) true
-            if success then //build the union
-                let unionargs = result
-                if fields |> Array.length > 0 then
-                    let tupletype = FSharpType.MakeTupleType(fields |> Array.map (fun t -> t.PropertyType))
-                    let tuple = FSharpValue.MakeTuple(unionargs,tupletype)
-                    let typedarr = FSharpValue.GetTupleFields(tuple) //is this necersarry? (probably)
-                    Some(!index,FSharpValue.MakeUnion(testcase,typedarr)|>unbox)
-                else Some(!index,FSharpValue.MakeUnion(testcase,result)|>unbox)
-            else None
-        |Fail -> None
+    if checkok then //next bit assumes you don't have Anychar and Prefixclass at the same time (this would be stupid)
+        match checkprefixclass testcase text index,grabAny testcase text index with
+        |SSome(t),_ ->    Some(!index,t|>unbox)
+        |NNone,Some(t) -> Some(!index,t|> unbox)
+        |NNone,None ->
+                let success =
+                    fields 
+                    |> Array.mapi (fun i elem -> i,elem)
+                    |> Array.fold (fun state (i,field) ->
+                        match state with
+                        |false -> false
+                        |true -> 
+                            let w,res,newind = getType (field.PropertyType) text !index
+                            index:=newind
+                            if w then result.[i]<-(res.Value)
+                            w) true
+                if success then //build the union
+                    let unionargs = result
+                    if fields |> Array.length > 0 then
+                        let tupletype = FSharpType.MakeTupleType(fields |> Array.map (fun t -> t.PropertyType))
+                        let tuple = FSharpValue.MakeTuple(unionargs,tupletype)
+                        let typedarr = FSharpValue.GetTupleFields(tuple) //is this necersarry? (probably)
+                        Some(!index,FSharpValue.MakeUnion(testcase,typedarr)|>unbox)
+                    else Some(!index,FSharpValue.MakeUnion(testcase,result)|>unbox)
+                else None
+        |Fail,_ -> None
     else None
 and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
     let result = ref Microsoft.FSharp.Core.Operators.Unchecked.defaultof<'t>

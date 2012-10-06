@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes.fs" />
+    <Compile Include="GrammarConst.fs" />
     <Compile Include="grammar.fs" />
     <Compile Include="parser.fs" />
   </ItemGroup>

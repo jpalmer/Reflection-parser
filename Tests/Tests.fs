@@ -25,7 +25,7 @@ type Tests() =
     [<Test>]
     member x.TestNewLine() =
         let actual  = realparse System.Environment.NewLine
-        let expected = Literal (Newline(Nl))
+        let expected = Literal (whitespace_or_newline.Newline(Nl))
         printfn "%A" actual
         Assert.AreEqual(expected,actual)
     [<Test>]
@@ -47,16 +47,16 @@ type Tests() =
     [<Test>]
     member x.Testhashif() =
         let actual  = realparse "#if _A1_"
-        let expected = Hashif(Ifd(Wspace(Ws,[]),IDent_text(ident_start_char.Underscore,LC(letter_char.LC('A'))::DC(digit_char.DC('1'))::CC(connecting_char.PC('_'))::[])))
+        let expected = Hashif(Ifd(Wspace(Ws,[]),IDent_text(ident_start_char.Underscore,LC(letter_char.LC('A'))::ident_char.DC(digit_char.DC('1'))::CC(connecting_char.PC('_'))::[])))
         printfn "actual %A" actual
         printfn "expected %A" expected
         Assert.AreEqual(expected,actual)
     [<Test>]
     member x.TestLongident() =
         let actual = realparse "Val._b.a1"
-        let expected =LongID (LI (IT (IDent_text (ident_start_char.LC (letter_char.LC 'V'),[LC (letter_char.LC 'a'); LC (letter_char.LC 'l')])),
-                                [(Dotchar, IT (IDent_text (Underscore,[LC (letter_char.LC 'b')])));
-                                    (Dotchar, IT (IDent_text (ident_start_char.LC (letter_char.LC 'a'),[DC (digit_char.DC '1')])))]))
+        let expected =LongID (long_ident.LI (IT (IDent_text (ident_start_char.LC (letter_char.LC 'V'),[LC (letter_char.LC 'a'); LC (letter_char.LC 'l')])),
+                                [(Dotchar, IT (IDent_text (ident_start_char.Underscore,[LC (letter_char.LC 'b')])));
+                                    (Dotchar, IT (IDent_text (ident_start_char.LC (letter_char.LC 'a'),[ident_char.DC (digit_char.DC '1')])))]))
         printfn "actual %A" actual
         printfn "expected %A" expected
         Assert.AreEqual(expected,actual)
