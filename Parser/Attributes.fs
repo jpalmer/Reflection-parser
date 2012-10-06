@@ -8,10 +8,10 @@ type Prefixs(s:string) =
     inherit System.Attribute()
     member x.Prefix = s
 
-type NotPrefixc(c:char[]) = 
+type NotPrefixc(c:char[],discard:bool) = 
     inherit System.Attribute()
     member x.Prefix = c
-
+    member x.Discard = discard
 type GrabPrefixClass(c:System.Globalization.UnicodeCategory[]) = 
     inherit System.Attribute()
     member x.Prefix = c

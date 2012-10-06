@@ -4,14 +4,13 @@ open Attributes
 //TODO: SEPERATOR BETWEEN LIST ELEMENTS
 //TODO: Add support for option types - Done - just need to check
 //TODO: When parsing a tuple allow for whitespace between elements - could grab it from grammar.Whitespace.  Also need to think about separators in lists
-let grammartypes = FSharpType.GetUnionCases(typeof<grammar.Main>)
 type SomeFail<'t> = 
     |SSome of 't
     |NNone
     |Fail
 let (|OtherL|FSOption|FSUnion|FSTuple|Other|) (t:System.Type) =
     if      t.IsGenericType && t.GetGenericTypeDefinition() =[].GetType().GetGenericTypeDefinition() then OtherL(t.GetGenericArguments())
-    else if t.IsGenericType && t.GetGenericTypeDefinition() =None.GetType().GetGenericTypeDefinition() then FSOption(t.GetGenericArguments())
+    else if t.IsGenericType && t.GetGenericTypeDefinition() =Some(1).GetType().GetGenericTypeDefinition() then FSOption(t.GetGenericArguments())
     else if Microsoft.FSharp.Reflection.FSharpType.IsUnion t then FSUnion
     else if Microsoft.FSharp.Reflection.FSharpType.IsTuple t then FSTuple
     else Other(t)
@@ -63,8 +62,10 @@ let checkprefixs (t:UnionCaseInfo) text (index:int ref) =
 let checkNotprefix (t:UnionCaseInfo) text (index: int ref) =
     let notprefix = t.GetCustomAttributes(typeof<NotPrefixc>)
     if notprefix.Length = 1 then 
-        if checkNprefix text !index ((notprefix.[0] :?> NotPrefixc).Prefix) then 
-            index := !index + 1;true
+        let casted = notprefix.[0] :?> NotPrefixc
+        if checkNprefix text !index (casted.Prefix) then 
+            if casted.Discard then index := !index + 1
+            true
         else false
     else true
 
@@ -110,25 +111,31 @@ and getOption elemtypes text index =
     |true -> optiontype.GetMethod("Some").Invoke(null,[|res|]),newind
     |false -> optiontype.GetMethod("get_None").Invoke(null,null),index
 //need to add support for option types
+and indent = ref 0
 and getType t text index :bool*obj option *int=
-    printfn "getting type %A index %i" t index
-    match t with
-    |OtherL(subt) ->
-         let r,newind = getTypeList subt text index
-         true,Some(r),newind
-    |FSOption(optt) -> 
-        let r,newind = getOption optt text index
-        true,Some(r),newind
-    |FSUnion ->
-        let worked,res,dex = parse text (FSharpType.GetUnionCases(t)) index
-        worked,Some(res|>box),dex
-    |FSTuple ->
-        let worked,res,dex = getTuple t text index
-        worked,Some(res),dex
-    | _ -> 
-        printfn "I don't know how to get %A" t
-        false,None,index
-
+    indent := !indent + 1
+    printfn "%s getting type %A index %i" (System.String(Array.create !indent ' ')) t index
+    let w,r,i = 
+        match t with
+        |OtherL(subt) ->
+             let r,newind = getTypeList subt text index
+             true,Some(r),newind
+        |FSOption(optt) -> 
+            let r,newind = getOption optt text index
+            true,Some(r),newind
+        |FSUnion ->
+            let worked,res,dex = parse text (FSharpType.GetUnionCases(t)) index
+            worked,Some(res|>box),dex
+        |FSTuple ->
+            let worked,res,dex = getTuple t text index
+            worked,Some(res),dex
+        | _ -> 
+            printfn "I don't know how to get %A" t
+            false,None,index
+    if w then
+        printfn "%s got type %A index %i" (System.String(Array.create !indent ' ')) t index
+    indent := !indent - 1
+    w,r,i
 
 
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
@@ -153,7 +160,9 @@ and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
                         |true -> 
                             let w,res,newind = getType (field.PropertyType) text !index
                             index:=newind
-                            if w then result.[i]<-(res.Value)
+                            if w then
+                                printfn "got %A" (field.PropertyType)
+                                result.[i]<-(res.Value)
                             w) true
                 if success then //build the union
                     let unionargs = result
@@ -177,5 +186,5 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
                 )) with
     |Some(t) -> true,!result,!resdex
     |None -> false,!result,index
-let realparse (text:string) = 
-    parse (text.ToCharArray()) grammartypes 0 |> fun (_,v,_) -> v
+let realparse (text:string) cases= 
+    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,_) -> v

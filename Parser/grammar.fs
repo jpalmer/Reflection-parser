@@ -7,9 +7,9 @@ open System.Globalization
 //A.1.1      Whitespace
 //
 type wschar = |[<Prefixc(' ')>] Ws
-type whiteSpace = |Wspace of Plus<wschar>
+type whiteSpace = Plus<wschar>
 type newline = |[<Prefixs("\r\n")>] Nl //should add support for linux newlines
-type whitespace_or_newline =
+type whitespace_or_newline = 
     |WhiteSpace of whiteSpace
     |Newline of newline
 
@@ -17,7 +17,7 @@ type whitespace_or_newline =
 //
 type block_comment_start = |[<Prefixs("(*")>] Bcs
 type block_comment_end = |[<Prefixs("*)")>] Bce
-type inside_End_of_line_comment = |[<NotPrefixc([|'\n';'\r'|])>] ELcc
+type inside_End_of_line_comment = |[<NotPrefixc([|'\n';'\r'|],true)>] ELcc
 type end_of_line_comment = |[<Prefixs(@"//")>] Elc of inside_End_of_line_comment list
 
 // 
@@ -25,6 +25,7 @@ type end_of_line_comment = |[<Prefixs(@"//")>] Elc of inside_End_of_line_comment
 //
 //A.1.4.1     Identifiers
 //
+//this appears somewhere else as well
 type digit_char = |[<GrabPrefixClass[|UnicodeCategory.DecimalDigitNumber|]>] DC of char
 type letter_char = |[<GrabPrefixClass[|UnicodeCategory.UppercaseLetter;UnicodeCategory.LowercaseLetter;UnicodeCategory.TitlecaseLetter;UnicodeCategory.ModifierLetter;
                         UnicodeCategory.OtherLetter;UnicodeCategory.LetterNumber|]>] LC of char
@@ -34,11 +35,11 @@ type formatting_char =  |[<GrabPrefixClass[|UnicodeCategory.Format|]>] PC of cha
 type ident_start_char =
     |LC of letter_char |[<Prefixc('_')>] Underscore
 type ident_char = //the spec has an entry for `_` here but it is not needed - it is included in Connecting_char
-    |LC of letter_char
-    |DC of digit_char
-    |CC of connecting_char
-    |CoC of combining_char
-    |FC of formatting_char
+    |LCi of letter_char
+    |DCi of digit_char
+    |CCi of connecting_char
+    |CoCi of combining_char
+    |FCi of formatting_char
     |[<Prefixc(''')>]Quote 
 type ident_text = |IDent_text of ident_start_char * (ident_char list)
 //
@@ -67,7 +68,7 @@ and rchar = |[<Prefixc('r')>] Dummy
 and startescape = |[<Prefixc('\\')>] Dummy
 and escape_char =
 |[<Prefixc('\\')>] Dquote of dquote
-|[<Prefixc('\\')>] Slash of slash
+|[<Prefixc('\\')>] Slash of escapeslash
 |[<Prefixc('\\')>] Quote of quote
 |[<Prefixc('\\')>] N of nchar
 |[<Prefixc('\\')>] T of tchar
@@ -76,19 +77,22 @@ and escape_char =
 
 
 and non_escape_chars =
-|[<NotPrefixc([|'"';'\\';''';'n';'t';'b';'r'|]); Anychar>] NEC of char
+|[<NotPrefixc([|'"';'\\';''';'n';'t';'b';'r'|],false); Anychar>] NEC of char
 //TODO:in the spec double quote " is not allowed in simple char char but this is incorrect
-and simple_char_char = |[<NotPrefixc([|'\n'; '\t'; '\r'; '\b' ;''';'\\'|]);Anychar>] SCC of char 
+and simple_char_char = |[<NotPrefixc([|'\n'; '\t'; '\r'; '\b' ;''';'\\'|],false);Anychar>] SCC of char 
 //TODO:assumed def - not in spec
-and simple_string_char = |[<NotPrefixc([|'\n'; '\t'; '\r'; '\b' ;'"';'\\'|]);Anychar>] SCC of char 
+and simple_string_char = |[<NotPrefixc([|'\n'; '\t'; '\r'; '\b' ;'"';'\\'|],false);Anychar>] SCC of char 
 and uchar = |[<Prefixc('u')>] Dummy 
 and Uchar = |[<Prefixc('U')>] Dummy
 and Bchar = |[<Prefixc('B')>] Dummy
-and unicodegraph_short = slash * uchar *hexdigit*hexdigit *hexdigit*hexdigit 
-and unicodegraph_long =  slash * Uchar * hexdigit*hexdigit * hexdigit*hexdigit* hexdigit*hexdigit* hexdigit*hexdigit 
-//FIXME: not in spec
-and trigraph = slash * digit_char * digit_char * digit_char
-and char_char = |SCC of simple_char_char |EC of escape_char |Trgr of trigraph |Unicode_short of unicodegraph_short
+and unicodegraph_short = escapeslash * uchar *hexdigit*hexdigit *hexdigit*hexdigit 
+and unicodegraph_long =  escapeslash * Uchar * hexdigit*hexdigit * hexdigit*hexdigit* hexdigit*hexdigit* hexdigit*hexdigit 
+//FIXME TODO: not in spec
+//also - requires prefixc - not sure why not owrking
+and trigraph = escapeslash * digit_char * digit_char * digit_char
+and char_char = 
+|SCC of simple_char_char    |EC of escape_char 
+|Trgr of trigraph           |Unicode_short of unicodegraph_short
 and string_char =
 |SSC of simple_string_char |EC of escape_char   |NEC of non_escape_chars |Trgr of trigraph
 |UCG_short of unicodegraph_short                |UCG_long of unicodegraph_long
@@ -107,7 +111,7 @@ and char_ = quote * char_char * quote
 and string_ = dquote * List<string_char> * dquote 
 and verbatim_string_char =
 |SSC of simple_string_char |NEC of non_escape_chars
-|NL of newline             |Slash of slash
+|NL of newline             |Slash of escapeslash
 |DDquote of dquote * dquote
 and verbatim_string = VS of at * dquote * List<verbatim_string_char> * dquote 
 //TODO: this is different to the spec - but makes more sense
@@ -118,21 +122,18 @@ and bytearray = dquote * List<string_char> * dquote * Bchar
 //
 //A.1.6      Numeric Literals
 //
-and digit  = |[<GrabPrefixClass([|System.Globalization.UnicodeCategory.DecimalDigitNumber|])>] D
-//
-// 
 //
 and hexchar = 
 |[<Prefixc('A')>] A |[<Prefixc('B')>] B |[<Prefixc('C')>] C |[<Prefixc('D')>] D |[<Prefixc('E')>] E |[<Prefixc('F')>] F
 |[<Prefixc('a')>] Aa|[<Prefixc('b')>] Bb|[<Prefixc('c')>] Cc|[<Prefixc('d')>] Dd|[<Prefixc('e')>] Ee|[<Prefixc('f')>] Ff
 and hexdigit =
-|D of digit
+|D of digit_char
 |H of hexchar
 and octaldigit =
 |[<Prefixc('0')>] D0 |[<Prefixc('1')>] D1 |[<Prefixc('2')>] D2 |[<Prefixc('3')>] D3 
 |[<Prefixc('4')>] D4 |[<Prefixc('5')>] D5 |[<Prefixc('6')>] D6 |[<Prefixc('7')>] D7 
 and bitdigit = |[<Prefixc('0')>] D0 |[<Prefixc('1')>] D1
-and int_ =  Plus<digit>
+and int_ =  Plus<digit_char>
 and zerochar = |[<Prefixc('0')>] Dummy
 and xXchar = |[<Prefixc('X')>] Dummy|[<Prefixc('x')>] Dummy2
 and oOchar = |[<Prefixc('O')>] Dummy|[<Prefixc('o')>] Dummy2
@@ -183,8 +184,8 @@ and ieee64 =    |Float of   float_
 and bignum = int_ * bignumId 
 and decimal_ = |FD of float_ * mMchar |ID of int_ * mMchar
 and float_ =
-|Dec of Plus<digit> * dot * List<digit>
-|Decl of Plus<digit> * Option<dot * List<digit>> * eEchar * Option<pmchar> * List<digit>
+|Dec of Plus<digit_char> * dot * List<digit_char>
+|Decl of Plus<digit_char> * Option<dot * List<digit_char>> * eEchar * Option<pmchar> * List<digit_char>
 
 //reserved-literal-formats :
 //
@@ -243,7 +244,7 @@ and active_pattern_op_name =
 //
 and first_op_char =  
 |Bang of bang           |Percent of percent |Amp of amp                 |Star of star   |Plus of plus   |Dash of dash 
-|Dot of dot             |Slash of slash     |At of at                   |Caret of caret |Pipe of pipe   |Tilde of tilde
+|Dot of dot             |Slash of divslash     |At of at                   |Caret of caret |Pipe of pipe   |Tilde of tilde
 |Lessthan of lessthan   |Equals of equals   |Greaterthan of greaterthan 
 and op_char =
 |FOC of first_op_char
@@ -570,7 +571,7 @@ and type_ =
 |TA of type_ * open_square * List<comma> * close_square
 |TL of type_ * lazy_w
 |TTydefs of type_ * typar_defns
-|DC of typar * dcop * type_
+|DCtype of typar * dcop * type_
 |AT of atomic_type
 and types = |Tlist of type_ * List<comma * type_> 
 //some things moved into here
@@ -989,7 +990,7 @@ and pat_param =
 |Arr of open_square * pat_param * List<semicolon * pat_param> * close_square
 |Tuple of open_brack * pat_param * List<comma * pat_param> * close_brack
 |LIP of long_ident * pat_param
-|DC of pat_param * colon * type_
+|DCast of pat_param * colon * type_
 |CE of lessthan * quote_op_left * expr * quote_op_right //minor change to use operator defined elsewhere
 |Null of null_w
 //
@@ -1321,8 +1322,8 @@ and measure_literal_seq = |MLP of measure_literal_power * Option<measure_literal
 and measure_literal_simp =
 |MLS of measure_literal_seq
 |Double of measure_literal_simp * star * measure_literal_simp
-|DoubleDiv of measure_literal_simp * slash * measure_literal_simp
-|Div of slash * measure_literal_simp
+|DoubleDiv of measure_literal_simp * divslash * measure_literal_simp
+|Div of divslash * measure_literal_simp
 |One of onechar
 and measure_literal =
 |Underscore of underscore
@@ -1484,11 +1485,3 @@ and attribute_target =
 //
 //e1 & e2       → (&) e1 e2
 
-
-type Main =
-|Literal of whitespace_or_newline
-|BCS of block_comment_start
-|BCE of block_comment_end
-|ELC of end_of_line_comment
-|Hashif of if_directive
-|LongID of long_ident

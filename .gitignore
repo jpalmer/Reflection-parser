@@ -9,3 +9,5 @@
 *.XML
 *.txt
 *.swp
+*/obj/*
+Parser/Runner/obj/*
