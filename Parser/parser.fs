@@ -114,7 +114,7 @@ and getOption elemtypes text index =
 and indent = ref 0
 and getType t text index :bool*obj option *int=
     indent := !indent + 1
-    printfn "%s getting type %A index %i" (System.String(Array.create !indent ' ')) t index
+//    printfn "%s getting type %A index %i" (System.String(Array.create !indent ' ')) t index
     let w,r,i = 
         match t with
         |OtherL(subt) ->
@@ -130,10 +130,10 @@ and getType t text index :bool*obj option *int=
             let worked,res,dex = getTuple t text index
             worked,Some(res),dex
         | _ -> 
-            printfn "I don't know how to get %A" t
+//            printfn "I don't know how to get %A" t
             false,None,index
-    if w then
-        printfn "%s got type %A index %i" (System.String(Array.create !indent ' ')) t index
+//    if w then
+//        printfn "%s got type %A index %i" (System.String(Array.create !indent ' ')) t index
     indent := !indent - 1
     w,r,i
 
@@ -161,7 +161,7 @@ and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
                             let w,res,newind = getType (field.PropertyType) text !index
                             index:=newind
                             if w then
-                                printfn "got %A" (field.PropertyType)
+//                                printfn "got %A" (field.PropertyType)
                                 result.[i]<-(res.Value)
                             w) true
                 if success then //build the union

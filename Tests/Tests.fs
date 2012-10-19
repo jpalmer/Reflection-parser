@@ -35,4 +35,17 @@ type Tests() =
             System.String(Array.create (c+1) ' '),
                 whitespace_or_newline.WhiteSpace(Ws,List.init c  (fun _ -> Ws))
         |1 ->"\r\n", whitespace_or_newline.Newline(newline.Nl)
-  
+    member x.MakeConstants() = 
+        let xint = x.MakeXint 1
+        match i with
+        |0 -> "",Sbyte()
+    member x.MakeXint i = //not very good coverage - but good enough
+        let num = RNG.Next(99)+100 
+        match i with
+        |0 -> sprintf "%i"   num,xint.Int(DC(num.ToString().[0]),DC(num.ToString().[1])::DC(num.ToString().[2])::[])
+        |1 -> 
+            let s = sprintf "0x%x" num //need to fix this - a way of correctly getting the chars then mapping to the appropriate hexdigits etc
+            s,xint.Hexint(zerochar.Dummy,xXchar.Dummy2,(s.[2],s.ToCharArray().[3..] |> Array.toList))
+        |2 -> sprintf "0x%X" num,()
+        |3 -> sprintf "0o%o" num,()
+        |4 -> sprintf "0O%o" num,()

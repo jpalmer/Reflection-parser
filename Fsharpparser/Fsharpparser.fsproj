@@ -5,24 +5,25 @@
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7bd3ed8f-b8f8-4d29-89bd-cd6bb710f976}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Runner</RootNamespace>
-    <AssemblyName>Runner</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
-    <Name>Runner</Name>
+    <ProjectGuid>{c88b389b-bdce-4948-86b9-3cdad3ca503e}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Fsharpparser</RootNamespace>
+    <AssemblyName>Fsharpparser</AssemblyName>
+    <TargetFrameworkVersion>v3.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <Name>Fsharpparser</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <Tailcalls>false</Tailcalls>
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>bin\Debug\Runner.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Fsharpparser.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>pdbonly</DebugType>
@@ -32,27 +33,20 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>bin\Release\Runner.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Fsharpparser.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Runner.fs" />
+    <Compile Include="grammar.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JackTests\JackTests.fsproj">
-      <Name>JackTests</Name>
-      <Project>{cf52fa7e-bb2c-431c-b780-63edeb6aeef7}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Jack\Jack.fsproj">
-      <Name>Jack</Name>
-      <Project>{6d9158b6-60ba-4da7-95dd-f3848214265b}</Project>
+    <ProjectReference Include="..\Parser\Parser.fsproj">
+      <Name>Parser</Name>
+      <Project>{d61b1bae-f1ee-4d89-aec0-50e1e6d024bf}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

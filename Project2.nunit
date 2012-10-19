@@ -1,0 +1,7 @@
+﻿<NUnitProject>
+  <Settings activeconfig="Debug" appbase="C:\Users\John\Desktop\parser\Parser\JackTests\bin\Debug" />
+  <Config name="Debug" binpathtype="Auto">
+    <assembly path="JackTests.dll" />
+  </Config>
+  <Config name="Release" binpathtype="Auto" />
+</NUnitProject>

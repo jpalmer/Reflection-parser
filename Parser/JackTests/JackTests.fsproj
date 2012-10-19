@@ -2,18 +2,18 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7bd3ed8f-b8f8-4d29-89bd-cd6bb710f976}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Runner</RootNamespace>
-    <AssemblyName>Runner</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
-    <Name>Runner</Name>
+    <ProjectGuid>{cf52fa7e-bb2c-431c-b780-63edeb6aeef7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>JackTests</RootNamespace>
+    <AssemblyName>JackTests</AssemblyName>
+    <TargetFrameworkVersion>v3.0</TargetFrameworkVersion>
+    <Name>JackTests</Name>
+    <TargetFrameworkProfile />
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -21,33 +21,30 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>bin\Debug\Runner.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\JackTests.XML</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <Tailcalls>true</Tailcalls>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
-    <DocumentationFile>bin\Release\Runner.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\JackTests.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
+    <Reference Include="nunit.framework, Version=2.5.9.10348, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" />
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Runner.fs" />
+    <Compile Include="JackTest.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JackTests\JackTests.fsproj">
-      <Name>JackTests</Name>
-      <Project>{cf52fa7e-bb2c-431c-b780-63edeb6aeef7}</Project>
+    <ProjectReference Include="..\..\Parser\Parser.fsproj">
+      <Name>Parser</Name>
+      <Project>{d61b1bae-f1ee-4d89-aec0-50e1e6d024bf}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\Jack\Jack.fsproj">
