@@ -18,7 +18,7 @@ type dest_ = |[<Prefixc('D')>]D |[<Prefixc('M')>] M |[<Prefixc('A')>]A
 type dest = dest_ * Option<dest_>
 type RHS_dest = |Dest of dest_ |One of one |Zero of zero
 type op = |[<Prefixc('+')>] Plus |[<Prefixc('-')>] Minus |[<Prefixc('&')>] And |[<Prefixc('|')>] Or
-type unop = |[<Prefixc('-')>] Minus |[<Prefixc('!')>] Bang
+type unop = |[<Prefixc('-')>] UMinus |[<Prefixc('!')>] Bang
 type jump = |[<Prefixs("JGT")>] JGT |[<Prefixs("JMP")>] JMP |[<Prefixs("JLE")>] JLE |[<Prefixs("JNE")>] JNE  |[<Prefixs("JGE")>] JGE
 type jumpsource = |De of dest_ |Z of zero
 
