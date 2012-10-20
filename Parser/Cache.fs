@@ -20,3 +20,40 @@ type cacheT<'a ,'b when 'a:equality>(f:'a[]->'b) =
             r
         else 
             snd(L.[t])
+
+open Microsoft.FSharp.Reflection
+open Attributes
+//---------Actual caches
+
+//-----------------
+//prefix caches
+//-----------------
+let prechar_cache =cache<_,_>( fun (t:UnionCaseInfo) -> 
+    let prechar = t.GetCustomAttributes(typeof<Prefixc>)
+    if prechar.Length = 1 then
+        true,((prechar.[0] :?> Prefixc).Prefix)
+    else false,' ')
+
+let preany_cache =cache<_,_>( fun (t:UnionCaseInfo) -> 
+    let prechar = t.GetCustomAttributes(typeof<Anychar>)
+    if prechar.Length = 1 then
+        true,FSharpValue.PreComputeUnionConstructor(t)
+    else false,fun _ -> null)
+
+let prestr_cache =cache<_,_>( fun (t:UnionCaseInfo) -> 
+    let prechar = t.GetCustomAttributes(typeof<Prefixs>)
+    if prechar.Length = 1 then
+        true,((prechar.[0] :?> Prefixs).Prefix)
+    else false,"")
+let preNchar_cache =cache<_,_>( fun (t:UnionCaseInfo) -> 
+    let prechar = t.GetCustomAttributes(typeof<NotPrefixc>)
+    if prechar.Length = 1 then
+        let casted = prechar.[0] :?> NotPrefixc
+        true,casted.Prefix,casted.Discard
+    else false,[||],false)
+let preclass_cache = cache<_,_>(fun (t:UnionCaseInfo) ->
+    let prechar = t.GetCustomAttributes(typeof<GrabPrefixClass>)
+    if prechar.Length = 1 then
+        true,(prechar.[0] :?> GrabPrefixClass).Prefix,FSharpValue.PreComputeUnionConstructor(t)
+    else false,[||],fun _ -> null
+    )

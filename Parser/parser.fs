@@ -31,11 +31,6 @@ let checkPrefixs (text:char[]) index (prefstr:string)=
         worked
     else false
 
-let prechar_cache =cache<_,_>( fun (t:UnionCaseInfo) -> 
-    let prechar = t.GetCustomAttributes(typeof<Prefixc>)
-    if prechar.Length = 1 then
-        true,((prechar.[0] :?> Prefixc).Prefix)
-    else false,' ')
 let checkprefix (t:UnionCaseInfo) text (index:int ref) =
     let w,c = prechar_cache.Get(t)
     if w then
@@ -44,34 +39,32 @@ let checkprefix (t:UnionCaseInfo) text (index:int ref) =
         else false
     else true
 let checkprefixclass (t:UnionCaseInfo) text (index:int ref) =
-    let prechar = t.GetCustomAttributes(typeof<GrabPrefixClass>)
-    if prechar.Length = 1 then 
-        if checkPrefixClass text !index ((prechar.[0] :?> GrabPrefixClass).Prefix) then
+    let w,s,c = preclass_cache.Get(t) 
+    if w then 
+        if checkPrefixClass text !index s then
             let char = text.[!index]
             index := !index + 1;
-            SSome(FSharpValue.MakeUnion(t,[|char:> obj|]))
+            SSome(c([|char:> obj|]))
         else Fail
     else NNone
 let grabAny (t:UnionCaseInfo) (text:char[]) (index:int ref) =
-    let prechar = t.GetCustomAttributes(typeof<Anychar>)
-    if prechar.Length = 1 then 
+    let w,c = preany_cache.Get(t) 
+    if w then 
         let char = text.[!index]
         index := !index + 1;
-        Some(FSharpValue.MakeUnion(t,[|char:> obj|]))
+        Some(c([|char:> obj|]))
     else None
 let checkprefixs (t:UnionCaseInfo) text (index:int ref) =
-    let prestr = t.GetCustomAttributes(typeof<Prefixs>)
-    if prestr.Length = 1 then
-        let prefstr = (prestr.[0] :?> Prefixs).Prefix
-        if checkPrefixs text !index prefstr then index := !index + prefstr.Length;true
+    let w,s = prestr_cache.Get(t)
+    if w then
+        if checkPrefixs text !index s then index := !index + s.Length;true
         else false
     else true
 let checkNotprefix (t:UnionCaseInfo) text (index: int ref) =
-    let notprefix = t.GetCustomAttributes(typeof<NotPrefixc>)
-    if notprefix.Length = 1 then 
-        let casted = notprefix.[0] :?> NotPrefixc
-        if checkNprefix text !index (casted.Prefix) then 
-            if casted.Discard then index := !index + 1
+    let w,c,d = preNchar_cache.Get(t)
+    if w then 
+        if checkNprefix text !index c then 
+            if d then index := !index + 1
             true
         else false
     else true
