@@ -43,8 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes.fs" />
-    <Compile Include="GrammarConst.fs" />
-    <Compile Include="grammar.fs" />
+    <Compile Include="EarlyBreak.fs" />
+    <Compile Include="Cache.fs" />
     <Compile Include="parser.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

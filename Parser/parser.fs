@@ -1,6 +1,7 @@
 module parser
 open Microsoft.FSharp.Reflection
 open Attributes
+open Cache
 //TODO: SEPERATOR BETWEEN LIST ELEMENTS
 //TODO: Add support for option types - Done - just need to check
 //TODO: When parsing a tuple allow for whitespace between elements - could grab it from grammar.Whitespace.  Also need to think about separators in lists
@@ -8,6 +9,7 @@ type SomeFail<'t> =
     |SSome of 't
     |NNone
     |Fail
+
 let (|OtherL|FSOption|FSUnion|FSTuple|Other|) (t:System.Type) =
     if      t.IsGenericType && t.GetGenericTypeDefinition() =[].GetType().GetGenericTypeDefinition() then OtherL(t.GetGenericArguments())
     else if t.IsGenericType && t.GetGenericTypeDefinition() =Some(1).GetType().GetGenericTypeDefinition() then FSOption(t.GetGenericArguments())
@@ -29,10 +31,15 @@ let checkPrefixs (text:char[]) index (prefstr:string)=
         worked
     else false
 
-let checkprefix (t:UnionCaseInfo) text (index:int ref) =
+let prechar_cache =cache<_,_>( fun (t:UnionCaseInfo) -> 
     let prechar = t.GetCustomAttributes(typeof<Prefixc>)
-    if prechar.Length = 1 then 
-        if checkPrefix text !index ((prechar.[0] :?> Prefixc).Prefix) then
+    if prechar.Length = 1 then
+        true,((prechar.[0] :?> Prefixc).Prefix)
+    else false,' ')
+let checkprefix (t:UnionCaseInfo) text (index:int ref) =
+    let w,c = prechar_cache.Get(t)
+    if w then
+        if checkPrefix text !index c then
             index := !index + 1;true
         else false
     else true
@@ -68,48 +75,76 @@ let checkNotprefix (t:UnionCaseInfo) text (index: int ref) =
             true
         else false
     else true
+//Some caches
+let optioncache = cacheT<_,_>(fun t ->
+    let optype = 
+        if t |> Array.length > 1 then FSharpType.MakeTupleType(t) else t.[0]
+    let optiontype = typeof<Option<_>>.GetGenericTypeDefinition().MakeGenericType(optype)
+    let somemeth = optiontype.GetMethod("Some")
+    let none = optiontype.GetMethod("get_None").Invoke(null,null)
+    let ttype = FSharpType.MakeTupleType(t)
+    somemeth,none,ttype
+)
+let tuplecache = cache<_,_>(fun t ->
+    Microsoft.FSharp.Reflection.FSharpType.GetTupleElements(t),Microsoft.FSharp.Reflection.FSharpValue.PreComputeTupleConstructor(t))
 
-let rec getTypeList elemtypes text index :obj*int=
+let testcasecache = cache<_,_> (fun (t:UnionCaseInfo) ->
+    let fields = t.GetFields()
+    let ttype = if fields |> Array.length > 0 then FSharpType.MakeTupleType(fields |> Array.map (fun t -> t.PropertyType)) else null
+    fields,Array.zeroCreate (fields |> Array.length),ttype
+    )
+
+let rec getTypeList_  elemtypes text index =
+    let worked,res,newind = getTuple (FSharpType.MakeTupleType(elemtypes)) text index
+    if worked then //If we got one element there might be more - 
+        Some(res),newind
+    else None,index
+
+and getTypeList elemtypes text index =
     let worked = ref true
+    let ind = ref index
     let listelemtype = //F# applies the trivial optimisation to eliminate tuples with 1 element
         if elemtypes |> Array.length > 1 then FSharpType.MakeTupleType(elemtypes) else elemtypes.[0]
-    let worked,res,newind = getTuple (FSharpType.MakeTupleType(elemtypes)) text index
-    let listtype = typeof<List<_>>.GetGenericTypeDefinition() 
+    let listtype = typeof<System.Collections.Generic.List<_>>.GetGenericTypeDefinition() 
     let genericListType = listtype.MakeGenericType(listelemtype)
-    if worked then //If we got one element there might be more - 
-        let newr,newerind = getTypeList elemtypes text newind
-        let newres = genericListType.GetMethod("Cons").Invoke(null,[|res;newr|])
-        newres,newerind
-    else genericListType.GetMethod("get_Empty").Invoke(null,null),index
-
+    let genlist = genericListType.GetConstructor([||]).Invoke(null) 
+    while !worked do
+        let w,i = getTypeList_ elemtypes text !ind
+        ind := i
+        match w with
+        |Some(t) -> 
+            worked := true
+            genericListType.GetMethod("Add").Invoke(genlist,[|t|]) |> ignore
+        |None -> worked := false
+    let arr = genericListType.GetMethod("ToArray",[||]).Invoke(genlist,null)
+    let ListModule = System.Reflection.Assembly.GetAssembly(typeof<List<_>>).GetTypes() |> Array.find (fun t -> t.Name.Contains("ListModule"))
+    let fslist = ListModule.GetMethod("OfArray").GetGenericMethodDefinition().MakeGenericMethod(listelemtype).Invoke(null,[|arr|])
+    fslist,!ind
 //If just one element return the untupled element
 and getTuple t text index :bool* obj * int = 
     let indref = ref index
     let worked = ref true
-    let elemtypes = Microsoft.FSharp.Reflection.FSharpType.GetTupleElements(t)
-    let res =
-        elemtypes |> Array.map (fun elemtype -> 
-            let w,res,newind = (getType elemtype text !indref)
-            if not w then worked := false;res//effectively break
+    let elemtypes,tuplemaker = tuplecache.Get(t)
+    let worked,res = 
+        elemtypes |> EarlyBreak.ArrayMapEarlyBreak (fun elemtype -> 
+            let w,res,newind = getType elemtype text !indref
+            if not w then w,res.Value 
             else
                 indref := newind
-                res ) |> Array.map (fun t -> t.Value)
-    if !worked then 
+                w,res.Value )
+    if worked then 
         let newres = 
             if elemtypes |> Array.length > 1 then
-                Microsoft.FSharp.Reflection.FSharpValue.MakeTuple(res,t)
+                 tuplemaker res
             else res.[0]
         true,newres,!indref
     else false,null,index
 and getOption elemtypes text index = 
-    let optype = 
-        if elemtypes |> Array.length > 1 then FSharpType.MakeTupleType(elemtypes) else elemtypes.[0]
-    let optiontype = typeof<Option<_>>.GetGenericTypeDefinition().MakeGenericType(optype)
-
-    let worked,res,newind = getTuple  (FSharpType.MakeTupleType(elemtypes)) text index   
+    let someMethod,none,ttype = optioncache.Get(elemtypes)
+    let worked,res,newind = getTuple ttype text index   
     match worked with
-    |true -> optiontype.GetMethod("Some").Invoke(null,[|res|]),newind
-    |false -> optiontype.GetMethod("get_None").Invoke(null,null),index
+    |true -> someMethod.Invoke(null,[|res|]),newind
+    |false -> none,index
 //need to add support for option types
 and indent = ref 0
 and getType t text index :bool*obj option *int=
@@ -139,8 +174,7 @@ and getType t text index :bool*obj option *int=
 
 
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
-    let fields = testcase.GetFields()
-    let result :obj [] = Array.zeroCreate (fields |> Array.length)
+    let fields,result,tupletype = testcasecache.Get(testcase) 
     let index = ref idx
     let checkok = //preliminary checks
         if idx < text.Length then //this does some unnecersarry checks - can optimise if necersarry later
@@ -165,13 +199,7 @@ and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
                                 result.[i]<-(res.Value)
                             w) true
                 if success then //build the union
-                    let unionargs = result
-                    if fields |> Array.length > 0 then
-                        let tupletype = FSharpType.MakeTupleType(fields |> Array.map (fun t -> t.PropertyType))
-                        let tuple = FSharpValue.MakeTuple(unionargs,tupletype)
-                        let typedarr = FSharpValue.GetTupleFields(tuple) //is this necersarry? (probably)
-                        Some(!index,FSharpValue.MakeUnion(testcase,typedarr)|>unbox)
-                    else Some(!index,FSharpValue.MakeUnion(testcase,result)|>unbox)
+                    Some(!index,FSharpValue.MakeUnion(testcase,result)|>unbox)
                 else None
         |Fail,_ -> None
     else None

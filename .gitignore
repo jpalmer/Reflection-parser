@@ -11,3 +11,6 @@
 *.swp
 */obj/*
 Parser/Runner/obj/*
+Parser/Runner/bin/*
+Parser/JackTests/bin/*
+*.cache
