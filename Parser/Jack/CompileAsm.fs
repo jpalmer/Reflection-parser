@@ -5,11 +5,11 @@ let make_int (i:int_literal) =
     match i with
     |Li(l) ->System.Int32.Parse(new string( l |> List.map (function |intchar.D(a)->a) |> List.toArray))
     
-
+let printlabel l =new System.String(match l with |a,b -> a::b |> List.toArray |> Array.map (function |LC(c) -> c))
 let compile_a (a:ainstruc) =
     match a with
     |Literal(l) -> sprintf "0%s" ((System.Convert.ToString(make_int l,2)).PadLeft(15,'0'))
-
+    |ALabel(Label(ll)) -> sprintf "0%s" (printlabel ll)
 let deststring (a)= sprintf "%c%c%c" (if plushas A a then '1' else '0') (if plushas D a then '1' else '0')(if plushas M a then '1' else '0')
 let jumpstring = function |None -> "000" |Some(_,JGT) -> "001" |Some(_,JMP) -> "111" |Some(_,JLE) -> "110" |Some(_,JGE) -> "011" |Some(_,JNE) -> "101"
 let compile_c (c:cinstruc) =
@@ -47,9 +47,9 @@ let compile_line (l:line) =
     match l with
     |Ainstruc(a) -> compile_a(a)
     |Cinstruc(c) -> compile_c(c)
-
+    |LabelDef(_,l,_) -> ""//something
 let compile_main_ l = 
-    l |> List.choose (function |(Some(a),_,_) -> Some(compile_line a) | _ -> None) //don't use recursion here - can cause stackoverflow
+    l |> List.choose (function |(Some(_,a),_,_,_) -> Some(compile_line a) | _ -> None) //don't use recursion here - can cause stackoverflow
 let compile_main (m:main) =
     match m with
     |L(t) -> compile_main_ t 

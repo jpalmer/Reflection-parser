@@ -108,3 +108,13 @@ D;JGT
         let compiled = CompileAsm.compile_main parsed
         let expected = System.IO.File.ReadAllLines("PongL.hack") |> Array.toList
         List.iter2 (fun (ex:string) act -> Assert.AreEqual(ex,act)) expected compiled
+
+    [<Test>]
+    member x.TestMax() =
+        let input = System.IO.File.ReadAllText("Max.txt")
+        let parsed = parser.realparse input typeof<JackAsm.main>
+        printfn "%A" parsed
+        let compiled = CompileAsm.compile_main parsed
+        let expected = System.IO.File.ReadAllLines("Max.hack") |> Array.toList
+        List.iter2 (fun (ex:string) act -> Assert.AreEqual(ex,act)) expected compiled
+

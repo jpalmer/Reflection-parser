@@ -2,7 +2,4 @@
 
 
 let t = JackTest.Tests()
-t.TestAdd()
-t.TestMaxL()
-t.TestRectL()
-t.TestPongL()
+t.TestMax()
