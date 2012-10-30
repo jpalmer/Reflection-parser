@@ -11,9 +11,9 @@ type closebrack = |[<Prefixc(')')>] Dummy
 type openbrack = |[<Prefixc('(')>] Dummy
 
 type whitespace = |Dummy of Plus<space>
-type inside_End_of_line_comment = |[<NotPrefixc([|'\n';'\r'|],true)>] ELcc
+type inside_End_of_line_comment = |[<NotPrefixc([|'\n';|],true)>] ELcc
 type end_of_line_comment = |[<Prefixs(@"//")>] Elc of inside_End_of_line_comment list
-type newline = |[<Prefixs("\r\n")>] Nl //should add support for linux newlines
+type newline = |[<Prefixs("\n")>] Nl //should add support for linux newlines
 type intchar = |[<GrabPrefixClass([|System.Globalization.UnicodeCategory.DecimalDigitNumber|])>] D of char
 type int_literal = |Li of intchar list
 
