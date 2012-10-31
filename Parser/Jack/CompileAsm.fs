@@ -8,8 +8,8 @@ let make_int (i:int_literal) =
 let printlabel l =new System.String(match l with |a,b -> a::b |> List.toArray |> Array.map (function |LC(c) -> c))
 let compile_a (a:ainstruc) =
     match a with
-    |Literal(l) -> sprintf "0%s" ((System.Convert.ToString(make_int l,2)).PadLeft(15,'0'))
-    |ALabel(Label(ll)) -> sprintf "0%s" (printlabel ll)
+    |Literal(l) -> sprintf "0%s" ((System.Convert.ToString(make_int l,2)).PadLeft(15,'0')),None
+    |ALabel(Label(ll)) -> "0", Some(ll)
 let deststring (a)= sprintf "%c%c%c" (if plushas A a then '1' else '0') (if plushas D a then '1' else '0')(if plushas M a then '1' else '0')
 let jumpstring = function |None -> "000" |Some(_,JGT) -> "001" |Some(_,JMP) -> "111" |Some(_,JLE) -> "110" |Some(_,JGE) -> "011" |Some(_,JNE) -> "101"
 let compile_c (c:cinstruc) =
@@ -46,10 +46,11 @@ let compile_c (c:cinstruc) =
 let compile_line (l:line) =
     match l with
     |Ainstruc(a) -> compile_a(a)
-    |Cinstruc(c) -> compile_c(c)
-    |LabelDef(_,l,_) -> ""//something
+    |Cinstruc(c) -> compile_c(c),None
+    |LabelDef(_,l,_) -> "",None//something
 let compile_main_ l = 
     l |> List.choose (function |(Some(_,a),_,_,_) -> Some(compile_line a) | _ -> None) //don't use recursion here - can cause stackoverflow
+let fix_labels l = List.map fst l
 let compile_main (m:main) =
     match m with
-    |L(t) -> compile_main_ t 
+    |L(t) -> compile_main_ t |> fix_labels
