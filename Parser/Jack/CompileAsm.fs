@@ -1,10 +1,11 @@
 ﻿module CompileAsm
 open JackAsm
 let mutable ind = 0
-let map = new System.Collections.Generic.Dictionary<_,_>()
-let vars = new System.Collections.Generic.Dictionary<_,_>()
+let map = new System.Collections.Generic.Dictionary<string,_>()
+let vars = new System.Collections.Generic.Dictionary<string,_>()
 let mutable ramind = 16
 let plushas a (b,(c:'t option )) = a=b || (c.IsSome &&  a=c.Value )
+let plus_string p = new string(p |> fun (a,b) -> (a::b) |> List.map (function LC(c) -> c)|> List.toArray)
 let make_int (i:int_literal) =
     match i with
     |Li(a,l) ->System.Int32.Parse(new string( (a::l) |> List.map (function |intchar.D(a)->a) |> List.toArray))
@@ -52,49 +53,50 @@ let compile_line (l:line) =
     match l with
     |Ainstruc(a) -> ind <- ind+1;compile_a(a)
     |Cinstruc(c,j) -> ind <- ind+1;compile_c(c,j),None
-    |LabelDef(_,Label(l),_) -> map.Add(l,ind);"",None//
+    |LabelDef(_,Label(l),_) -> map.Add(plus_string l,ind);"",None//
 let compile_main_ l = 
     l |> List.choose (function |(Some(_,a),_,_,_) -> Some(compile_line a) | _ -> None) //don't use recursion here - can cause stackoverflow
 let fix_labels  = 
     List.map (fun (i,l) ->
         match l with
         |Some(Label(ll)) -> 
-            match map.ContainsKey(ll) with
-            |true -> sprintf "%s%s" i ((bin_int (map.[ll])).PadLeft(15,'0'))
+            let ll_s = plus_string ll
+            match map.ContainsKey(ll_s) with
+            |true -> sprintf "%s%s" i ((bin_int (map.[ll_s])).PadLeft(15,'0'))
             |false ->
-                match vars.ContainsKey(ll) with
-                |true -> sprintf "%s%s" i ((bin_int (vars.[ll])).PadLeft(15,'0'))
+                match vars.ContainsKey(plus_string ll) with
+                |true -> sprintf "%s%s" i ((bin_int (vars.[ll_s])).PadLeft(15,'0'))
                 |false ->
-                    vars.Add(ll,ramind)
+                    vars.Add(ll_s,ramind)
                     ramind <- ramind + 1
-                    sprintf "%s%s" i ((bin_int (vars.[ll])).PadLeft(15,'0'))
+                    sprintf "%s%s" i ((bin_int (vars.[ll_s])).PadLeft(15,'0'))
         |None -> i) >> List.filter(fun t -> t <> "")
 let compile_main (m:main) =
     map.Clear()
     vars.Clear()
-    vars.Add((LC('S'),LC('C')::LC('R')::LC('E')::LC('E')::LC('N')::[]),16384)
-    vars.Add((LC('K'),LC('B')::LC('D')::[]),24576)
-    vars.Add((LC('R'),LC('0')::[]),0)
-    vars.Add((LC('R'),LC('1')::[]),1)
-    vars.Add((LC('R'),LC('2')::[]),2)
-    vars.Add((LC('R'),LC('3')::[]),3)
-    vars.Add((LC('R'),LC('4')::[]),4)
-    vars.Add((LC('R'),LC('5')::[]),5)
-    vars.Add((LC('R'),LC('6')::[]),6)
-    vars.Add((LC('R'),LC('7')::[]),7)
-    vars.Add((LC('R'),LC('8')::[]),8)
-    vars.Add((LC('R'),LC('9')::[]),9)
-    vars.Add((LC('R'),LC('1')::LC('0')::[]),10)
-    vars.Add((LC('R'),LC('1')::LC('1')::[]),11)
-    vars.Add((LC('R'),LC('1')::LC('2')::[]),12)
-    vars.Add((LC('R'),LC('1')::LC('3')::[]),13)
-    vars.Add((LC('R'),LC('1')::LC('4')::[]),14)
-    vars.Add((LC('R'),LC('1')::LC('5')::[]),15)
-    vars.Add((LC('S'),LC('P')::[]),0)
-    vars.Add((LC('L'),LC('C')::LC('L')::[]),1)
-    vars.Add((LC('A'),LC('R')::LC('G')::[]),2)
-    vars.Add((LC('T'),LC('H')::LC('I')::LC('S')::[]),3)
-    vars.Add((LC('T'),LC('H')::LC('A')::LC('T')::[]),4)
+    vars.Add("SCREEN",16384)
+    vars.Add("KBD",24576)
+    vars.Add("R0",0)
+    vars.Add("R1",1)
+    vars.Add("R2",2)
+    vars.Add("R3",3)
+    vars.Add("R4",4)
+    vars.Add("R5",5)
+    vars.Add("R6",6)
+    vars.Add("R7",7)
+    vars.Add("R8",8)
+    vars.Add("R9",9)
+    vars.Add("R10",10)
+    vars.Add("R11",11)
+    vars.Add("R12",12)
+    vars.Add("R13",13)
+    vars.Add("R14",14)
+    vars.Add("R15",15)
+    vars.Add("SP",0)
+    vars.Add("LCL",1)
+    vars.Add("ARG",2)
+    vars.Add("THIS",3)
+    vars.Add("THAT",4)
     ind <- 0
     ramind <- 16
     match m with
