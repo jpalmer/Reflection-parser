@@ -2,4 +2,4 @@
 
 
 let t = JackTest.Tests()
-t.TestMax()
+t.TestPong()
