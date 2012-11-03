@@ -6,9 +6,7 @@ let vars = new System.Collections.Generic.Dictionary<string,_>()
 let mutable ramind = 16
 let plushas a (b,(c:'t option )) = a=b || (c.IsSome &&  a=c.Value )
 let plus_string p = new string(p |> fun (a,b) -> (a::b) |> List.map (function LC(c) -> c)|> List.toArray)
-let make_int (i:int_literal) =
-    match i with
-    |Li(a,l) ->System.Int32.Parse(new string( (a::l) |> List.map (function |intchar.D(a)->a) |> List.toArray))
+let make_int (a,l) = System.Int32.Parse(new string( (a::l) |> List.map (function |intchar.D(a)->a) |> List.toArray))
     
 let printlabel l =new System.String(match l with |a,b -> a::b |> List.toArray |> Array.map (function |LC(c) -> c))
 let bin_int (i:int) = System.Convert.ToString(i,2)
@@ -53,13 +51,13 @@ let compile_line (l:line) =
     match l with
     |Ainstruc(a) -> ind <- ind+1;compile_a(a)
     |Cinstruc(c,j) -> ind <- ind+1;compile_c(c,j),None
-    |LabelDef(_,Label(l),_) -> map.Add(plus_string l,ind);"",None//
+    |LabelDef(_,l,_) -> map.Add(plus_string l,ind);"",None//
 let compile_main_ l = 
     l |> List.choose (function |(Some(_,a),_,_,_) -> Some(compile_line a) | _ -> None) //don't use recursion here - can cause stackoverflow
 let fix_labels  = 
     List.map (fun (i,l) ->
         match l with
-        |Some(Label(ll)) -> 
+        |Some(ll) -> 
             let ll_s = plus_string ll
             match map.ContainsKey(ll_s) with
             |true -> sprintf "%s%s" i ((bin_int (map.[ll_s])).PadLeft(15,'0'))

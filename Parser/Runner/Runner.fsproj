@@ -45,6 +45,11 @@
     <Compile Include="Runner.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Parser\Parser.fsproj">
+      <Name>Parser</Name>
+      <Project>{d61b1bae-f1ee-4d89-aec0-50e1e6d024bf}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\JackTests\JackTests.fsproj">
       <Name>JackTests</Name>
       <Project>{cf52fa7e-bb2c-431c-b780-63edeb6aeef7}</Project>

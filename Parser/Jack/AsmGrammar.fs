@@ -4,8 +4,6 @@ module JackAsm
 open Attributes
 type equals = |[<Prefixc('=')>] Dummy
 type colon = |[<Prefixc(';')>] Dummy
-type zero = |[<Prefixc('0')>] Dummy
-type one = |[<Prefixc('1')>] Dummy
 type space = |[<Prefixc(' ')>] Dummy
 type closebrack = |[<Prefixc(')')>] Dummy
 type openbrack = |[<Prefixc('(')>] Dummy
@@ -16,15 +14,15 @@ type newline = |[<Prefixs("\r\n")>] Nl //should add support for linux newlines
 #endif
 type end_of_line_comment = |[<Prefixs(@"//")>] Elc of inside_End_of_line_comment list
 type intchar = |[<GrabPrefixClass([|System.Globalization.UnicodeCategory.DecimalDigitNumber|])>] D of char
-type int_literal = |Li of Plus<intchar>
+type int_literal = Plus<intchar>
 
 type dest_ = |[<Prefixc('D')>]D |[<Prefixc('M')>] M |[<Prefixc('A')>]A
 type dest = dest_ * Option<dest_>
-type RHS_dest = |Dest of dest_ |One of one |Zero of zero
+type RHS_dest = |Dest of dest_ |[<Prefixc('1')>]One |[<Prefixc('0')>]Zero
 type op = |[<Prefixc('+')>] Plus |[<Prefixc('-')>] Minus |[<Prefixc('&')>] And |[<Prefixc('|')>] Or
 type unop = |[<Prefixc('-')>] UMinus |[<Prefixc('!')>] Bang
 type jump = |[<Prefixs("JGT")>] JGT |[<Prefixs("JMP")>] JMP |[<Prefixs("JLE")>] JLE |[<Prefixs("JNE")>] JNE  |[<Prefixs("JGE")>] JGE
-type jumpsource = |De of dest_ |Z of zero
+type jumpsource = |De of dest_ |[<Prefixc('0')>]Z
 
 type LabelChar = |[<GrabPrefixClass([|
                                         System.Globalization.UnicodeCategory.LowercaseLetter;
@@ -33,7 +31,7 @@ type LabelChar = |[<GrabPrefixClass([|
                                         System.Globalization.UnicodeCategory.DecimalDigitNumber;
                                         System.Globalization.UnicodeCategory.OtherPunctuation;
                                         System.Globalization.UnicodeCategory.CurrencySymbol |])>] LC of char
-type label = |Label of Plus<LabelChar>
+type label = Plus<LabelChar>
 type cinstruc = 
     |Op of dest * equals * dest_ * op * RHS_dest 
     |Unop of dest * equals * unop * RHS_dest 

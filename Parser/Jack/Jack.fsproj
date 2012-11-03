@@ -39,7 +39,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsmGrammar.fs" />
+    <Compile Include="VMGrammar.fs" />
     <Compile Include="CompileAsm.fs" />
+    <Compile Include="CompileVM.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Parser\Parser.fsproj">
