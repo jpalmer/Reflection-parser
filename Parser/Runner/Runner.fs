@@ -7,8 +7,8 @@ push constant 8
 add
 " typeof<main>)
 
-printfn "%A" (realparse "push constant 7
+(realparse "push constant 7
 push constant 8
 add
-" typeof<main> |> CompileVM.compile_main)
+" typeof<main> |> CompileVM.compile_main |> List.iter (printfn "%s"))
 System.Console.Read() |> ignore
