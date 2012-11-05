@@ -10,7 +10,10 @@ type openbrack = |[<Prefixc('(')>] Dummy
 type whitespace = |Dummy of Plus<space>
 #if WINDOWS
 type inside_End_of_line_comment = |[<NotPrefixc([|'\r';'\n';|],true)>] ELcc
-type newline = |[<Prefixs("\r\n")>] Nl //should add support for linux newlines
+type newline = |[<Prefixs("\r\n")>] Nl 
+#else
+type inside_End_of_line_comment = |[<NotPrefixc([|'\n';|],true)>] ELcc
+type newline = |[<Prefixc('\n')>] Nl 
 #endif
 type end_of_line_comment = |[<Prefixs(@"//")>] Elc of inside_End_of_line_comment list
 type intchar = |[<GrabPrefixClass([|System.Globalization.UnicodeCategory.DecimalDigitNumber|])>] D of char
