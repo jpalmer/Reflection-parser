@@ -2,6 +2,7 @@
 open JackAsm
 open VMGrammar
 let MtoA = Cinstruc(Assign((A,None),equals.Dummy,Dest(M)),None)
+let MtoD = Cinstruc(Assign((D,None),equals.Dummy,Dest(M)),None)
 let loadSP = Ainstruc(ALabel(LC 'S',(LC 'P')::[]))
 let incSP = 
     //get the SP                           //incr it
@@ -20,6 +21,7 @@ let DtoSP = loadSP::Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)::[]
 let SPtoD = loadSP::Cinstruc(Assign((D,None),equals.Dummy,Dest(M)),None)::[]
 let SPtoA = loadSP::Cinstruc(Assign((A,None),equals.Dummy,Dest(M)),None)::[]
 let SP_toA = loadSP::MtoA::[]
+let SP_toD = loadSP::MtoD::[]
 let AddAD = Cinstruc(Op((D,None),equals.Dummy,D,Plus,Dest(A)),None)
 let compile_line (l:line):JackAsm.line list =
     match l with
@@ -27,6 +29,7 @@ let compile_line (l:line):JackAsm.line list =
         match seg with
         |C -> Ainstruc(Literal(snd (literal.Value)))::(AtoSP_@incSP)
     |Add -> SPtoD@decSP@SPtoA@(AddAD::[])@DtoSP
+    |Eq -> SP_toD@decSP@SPtoA@ //something
         
 let init =
     Ainstruc(Literal(intchar.D('1'), ((intchar.D '0')::[])))::AtoSP
