@@ -15,7 +15,7 @@ let compile_a (a:ainstruc) =
     |Literal(l) -> sprintf "0%s" ((bin_int (make_int l)).PadLeft(15,'0')),None
     |ALabel(ll) -> "0", Some(ll)
 let deststring (a)= sprintf "%c%c%c" (if plushas A a then '1' else '0') (if plushas D a then '1' else '0')(if plushas M a then '1' else '0')
-let jumpstring = function |None -> "000" |Some(_,JGT) -> "001" |Some(_,JMP) -> "111" |Some(_,JLE) -> "110" |Some(_,JGE) -> "011" |Some(_,JNE) -> "101"
+let jumpstring = function |None -> "000" |Some(_,JGT) -> "001" |Some(_,JMP) -> "111" |Some(_,JLE) -> "110" |Some(_,JGE) -> "011" |Some(_,JNE) -> "101" |Some(_,JEQ) -> "010"
 let compile_c (c:cinstruc,j) =
     match c with
     |Assign(d,_,s) ->
@@ -38,6 +38,7 @@ let compile_c (c:cinstruc,j) =
             |M,Minus,Dest(D) -> "1000111"
             |D,And,Dest(M)   -> "1000000"
             |D,Or,Dest(M)    -> "1010101"
+            |_               -> failwith "unimplemented asm instruction"
         sprintf "111%s%s%s" comp dest (jumpstring j)
     |Value(d,j) ->
         let dest = "000"
@@ -45,7 +46,7 @@ let compile_c (c:cinstruc,j) =
         sprintf "111%s%s%s" comp dest (jumpstring j)
     |Unop(d,_,o,s) ->
         let dest = deststring d
-        let comp = match o,s with |UMinus,Dest(A) -> "0110011" |UMinus,One(_) -> "0111010" |Bang,Dest(M) -> "1110001"
+        let comp = match o,s with |UMinus,Dest(A) -> "0110011" |UMinus,One(_) -> "0111010" |Bang,Dest(M) -> "1110001" | _ -> failwith "unimplemented unary operator"
         sprintf "111%s%s%s" comp dest (jumpstring j)
 let compile_line (l:line) =
     match l with
@@ -72,29 +73,29 @@ let fix_labels  =
 let compile_main (m:main) =
     map.Clear()
     vars.Clear()
-    vars.Add("SCREEN",16384)
-    vars.Add("KBD",24576)
-    vars.Add("R0",0)
-    vars.Add("R1",1)
-    vars.Add("R2",2)
-    vars.Add("R3",3)
-    vars.Add("R4",4)
-    vars.Add("R5",5)
-    vars.Add("R6",6)
-    vars.Add("R7",7)
-    vars.Add("R8",8)
-    vars.Add("R9",9)
-    vars.Add("R10",10)
-    vars.Add("R11",11)
-    vars.Add("R12",12)
-    vars.Add("R13",13)
-    vars.Add("R14",14)
-    vars.Add("R15",15)
-    vars.Add("SP",0)
-    vars.Add("LCL",1)
-    vars.Add("ARG",2)
-    vars.Add("THIS",3)
-    vars.Add("THAT",4)
+    [| ("SCREEN",16384);
+                        ("KBD",24576);
+                        ("R0",0);
+                        ("R1",1);
+                        ("R2",2);
+                        ("R3",3);
+                        ("R4",4);
+                        ("R5",5);
+                        ("R6",6);
+                        ("R7",7);
+                        ("R8",8);
+                        ("R9",9);
+                        ("R10",10);
+                        ("R11",11);
+                        ("R12",12);
+                        ("R13",13);
+                        ("R14",14);
+                        ("R15",15);
+                        ("SP",0);
+                        ("LCL",1);
+                        ("ARG",2);
+                        ("THIS",3);
+                        ("THAT",4); |] |> Array.iter (vars.Add)
     ind <- 0
     ramind <- 16
     match m with

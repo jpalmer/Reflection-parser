@@ -18,18 +18,26 @@ let AtoSP =
     //move A to D                            //and move D to SP
     Cinstruc(Assign((D,None),equals.Dummy,Dest(A)),None)::loadSP::Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)::[]
 let DtoSP = loadSP::Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)::[]
-let SPtoD = loadSP::Cinstruc(Assign((D,None),equals.Dummy,Dest(M)),None)::[]
-let SPtoA = loadSP::Cinstruc(Assign((A,None),equals.Dummy,Dest(M)),None)::[]
-let SP_toA = loadSP::MtoA::[]
-let SP_toD = loadSP::MtoD::[]
-let AddAD = Cinstruc(Op((D,None),equals.Dummy,D,Plus,Dest(A)),None)
+let SPtoA = loadSP::MtoA::[]
+let SPtoD = loadSP::MtoD::[]
+let AddAD =  Cinstruc(Op((D,None),equals.Dummy,D,Plus,Dest(A)),None)
+let diffDM = Cinstruc(Op((D,None),equals.Dummy,D,Minus,Dest(M)),None)
+let mutable labelcount = 0
+let makelabel() =
+    labelcount <- labelcount + 1
+    let label = (LC('L'),((sprintf "%i" labelcount).ToCharArray() |> Array.toList |> List.map LC))
+    (LabelDef(openbrack.Dummy,label,closebrack.Dummy)),(Ainstruc(ALabel(label))),label
+    
 let compile_line (l:line):JackAsm.line list =
     match l with
     |Push(P(_,seg,literal)) -> 
         match seg with
         |C -> Ainstruc(Literal(snd (literal.Value)))::(AtoSP_@incSP)
     |Add -> SPtoD@decSP@SPtoA@(AddAD::[])@DtoSP
-    |Eq -> SP_toD@decSP@SPtoA@ //something
+    |Eq -> 
+        let labeldef,loadlab,instr = makelabel()
+        SPtoD@decSP@(loadlab::Cinstruc(Op((D,None),equals.Dummy,D,Minus,Dest(M)),Some(colon.Dummy,JEQ))::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)::labeldef::[])
+
         
 let init =
     Ainstruc(Literal(intchar.D('1'), ((intchar.D '0')::[])))::AtoSP
