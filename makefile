@@ -16,8 +16,8 @@ ${BINDIR}Parser.dll:
 ${BINDIR}Jack.dll: ${BINDIR}Parser.dll 
 	cd Jack && make
 
-${BINDIR}Runner.exe: Parser/Runner/Runner.fs ${BINDIR}Parser.dll ${BINDIR}Jack.dll
-	${COMPILE}  Parser/Runner/Runner.fs -r "${BINDIR}Parser.dll" -r "${BINDIR}Jack.dll"  -o ${BINDIR}Runner.exe
+${BINDIR}Runner.exe: Runner/Runner.fs ${BINDIR}Parser.dll ${BINDIR}Jack.dll
+	${COMPILE}  Runner/Runner.fs -r "${BINDIR}Parser.dll" -r "${BINDIR}Jack.dll"  -o ${BINDIR}Runner.exe
 
 ${TXTS}: 
 	cp ${JACKTESTDIR}/*.txt bin
