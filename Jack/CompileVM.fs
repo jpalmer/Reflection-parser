@@ -40,10 +40,17 @@ let compile_line (l:line):JackAsm.line list =
 
         
 let init =
-    Ainstruc(Literal(intchar.D('1'), ((intchar.D '0')::[])))::AtoSP
-let compile_main_ l = 
-    l |> List.collect (function |(Some(a),_,_,_) ->compile_line a | _ -> []) |> fun t -> init@t |> List.map (fun l -> Some(None,l),None,None,JackAsm.newline.Nl) //don't use recursion here - can cause stackoverflow
+   // Ainstruc(Literal(intchar.D '2',intchar.D '5'::intchar.D '6'::[]))
+   // ::Cinstruc(Assign((D,None),equals.Dummy,Dest(A)),None)
+   // ::Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)
+   // ::[]
+   []
 
+let compile_main_ l = 
+    l 
+    |> List.collect (function |(Some(a),_,_,_) ->compile_line a | _ -> []) 
+    |> fun t -> init@t 
+    |> List.map (fun l -> Some(None,l),None,None,JackAsm.newline.Nl) //don't use recursion here - can cause stackoverflow
 let compile_main (t:VMGrammar.main) = 
     match t with
     |L(l) ->(JackAsm.main.L((compile_main_ l)))

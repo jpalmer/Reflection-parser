@@ -15,3 +15,8 @@ Parser/JackTests/bin/*
 *.cache
 *.FileListAbsolute.txt
 bin/*
+nand2tetris/
+*.asm
+*.out
+*.cmp
+*.tst
