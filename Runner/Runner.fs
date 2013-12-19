@@ -30,5 +30,5 @@ push constant 82
 or
 
 
-" typeof<main> |> CompileVM.compile_main |> List.iter (printfn "%s"))
+" typeof<main> |> CompileVM.compile_main |> printfn "%A" )
 System.Console.Read() |> ignore
