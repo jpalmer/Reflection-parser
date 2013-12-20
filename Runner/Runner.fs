@@ -25,7 +25,7 @@ push constant 891
 lt
 push constant 891
 push constant 892
-lt
+lt"(*
 push constant 891
 push constant 891
 lt
@@ -49,8 +49,4 @@ and
 push constant 82
 or
 not
-
-
-
-" typeof<main> |> CompileVM.compile_main |> PrintAsm.print|> printfn "%s" )
-System.Console.Read() |> ignore
+*) typeof<main> |> CompileVM.compile_main |> PrintAsm.print|> printfn "%s" )

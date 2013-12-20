@@ -39,7 +39,7 @@ type cinstruc =
     |Op of dest * equals * dest_ * op * RHS_dest 
     |Unop of dest * equals * unop * RHS_dest 
     |Assign of dest * equals * RHS_dest  
-    |Value of jumpsource * option<colon * jump> //no point just having A - need to jump so should always be some
+    |Value of jumpsource  //no point just having A - need to jump so should always be some
 type ainstruc = 
     |[<Prefixc('@')>] Literal of int_literal
     |[<Prefixc('@')>] ALabel of label

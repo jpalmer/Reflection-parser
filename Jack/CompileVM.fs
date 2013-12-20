@@ -3,6 +3,8 @@ open JackAsm
 open VMGrammar
 let MtoA = Cinstruc(Assign((A,None),equals.Dummy,Dest(M)),None)
 let MtoD = Cinstruc(Assign((D,None),equals.Dummy,Dest(M)),None)
+let DtoM = Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)
+let decM = Cinstruc(Op((M,None),equals.Dummy,M,Minus,One),None)
 let loadSP = Ainstruc(ALabel(LC 'S',(LC 'P')::[]))
 let incSP = 
     //get the SP                           //incr it
@@ -36,7 +38,14 @@ let compile_line (l:line):JackAsm.line list =
     |Add -> SPtoD@decSP@SPtoA@(AddAD::[])@DtoSP
     |Eq -> 
         let labeldef,loadlab,instr = makelabel()
-        SPtoD@decSP@(loadlab::Cinstruc(Op((D,None),equals.Dummy,D,Minus,Dest(M)),Some(colon.Dummy,JEQ))::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)::labeldef::[])
+        (loadSP::(decM::MtoA::MtoD::loadSP::decM::MtoA::MtoA::Cinstruc(Op((D,None),equals.Dummy,D,Minus,Dest(A)),None)::[]))
+        @(loadlab
+        ::Cinstruc(Value(De(D)),Some(colon.Dummy,JEQ))
+        ::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)
+        ::labeldef
+        ::Cinstruc(Unop((D,None),equals.Dummy,Bang,Dest(D)),None)
+        ::loadSP::MtoA::DtoM::incSP)
+//        ::[]
 
         
 let init =
@@ -51,6 +60,7 @@ let compile_main_ l =
     |> List.collect (function |(Some(a),_,_,_) ->compile_line a | _ -> []) 
     |> fun t -> init@t 
     |> List.map (fun l -> Some(None,l),None,None,JackAsm.newline.Nl) //don't use recursion here - can cause stackoverflow
+ //   |> function l ->l|> List.iter (printfn "%A");l
 let compile_main (t:VMGrammar.main) = 
     match t with
     |L(l) ->(JackAsm.main.L((compile_main_ l)))

@@ -40,7 +40,7 @@ let compile_c (c:cinstruc,j) =
             |D,Or,Dest(M)    -> "1010101"
             |_               -> failwith "unimplemented asm instruction"
         sprintf "111%s%s%s" comp dest (jumpstring j)
-    |Value(d,j) ->
+    |Value(d) ->
         let dest = "000"
         let comp = match d with |De(A) -> "0110000" |De(D) -> "0001100" |De(M) -> "1110000" |Z(_) -> "0101010"
         sprintf "111%s%s%s" comp dest (jumpstring j)

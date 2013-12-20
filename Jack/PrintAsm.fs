@@ -19,7 +19,7 @@ let print (L(input):JackAsm.main) =
                     |Assign(dest,_,rdest) -> sprintf "%s=%s" (printdest dest) (printrhsdest rdest)
                     |Unop(dest,_,unop,rdest) -> sprintf "%s=%c%s" (printdest dest) (printunop unop) (printrhsdest rdest)
                     |Op(dest,_,dest_,op,rdest) -> sprintf "%s=%c%c%s" (printdest dest) (printdest_ dest_) (printop op) (printrhsdest rdest)
-//                    |Value(j,t) -> match j with |De(d) -> sprintf "%c" (printdest_ d) |Z->
+                    |Value(j) -> match j with |De(d) -> sprintf "%c" (printdest_ d) 
                  let jmppart = 
                     match jump with
                     |None -> ""
