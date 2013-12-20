@@ -15,10 +15,10 @@ let decSP =
 //clobbers A,D
 let AtoSP_ = 
     //move A to D                            //and move D to SP
-    Cinstruc(Assign((D,None),equals.Dummy,Dest(A)),None)::loadSP::MtoA::Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)::[]
+    Cinstruc(Assign((D,None),equals.Dummy,Dest(A)),None)::loadSP::MtoA::DtoM::[]
 let AtoSP = 
     //move A to D                            //and move D to SP
-    Cinstruc(Assign((D,None),equals.Dummy,Dest(A)),None)::loadSP::Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)::[]
+    Cinstruc(Assign((D,None),equals.Dummy,Dest(A)),None)::loadSP::DtoM::[]
 let DtoSP = loadSP::Cinstruc(Assign((M,None),equals.Dummy,Dest(D)),None)::[]
 let SPtoA = loadSP::MtoA::[]
 let SPtoD = loadSP::MtoD::[]
@@ -29,7 +29,9 @@ let makelabel() =
     labelcount <- labelcount + 1
     let label = (LC('L'),((sprintf "%i" labelcount).ToCharArray() |> Array.toList |> List.map LC))
     (LabelDef(openbrack.Dummy,label,closebrack.Dummy)),(Ainstruc(ALabel(label))),label
-    
+let SubtractTopStack() = 
+    //load the first no               and the second      and subtract
+    loadSP::decM::MtoA::MtoD::loadSP::decM::MtoA::MtoA::Cinstruc(Op((D,None),equals.Dummy,D,Minus,Dest(A)),None)::[] 
 let compile_line (l:line):JackAsm.line list =
     match l with
     |Push(P(_,seg,literal)) -> 
@@ -38,14 +40,13 @@ let compile_line (l:line):JackAsm.line list =
     |Add -> SPtoD@decSP@SPtoA@(AddAD::[])@DtoSP
     |Eq -> 
         let labeldef,loadlab,instr = makelabel()
-        (loadSP::(decM::MtoA::MtoD::loadSP::decM::MtoA::MtoA::Cinstruc(Op((D,None),equals.Dummy,D,Minus,Dest(A)),None)::[]))
-        @(loadlab
-        ::Cinstruc(Value(De(D)),Some(colon.Dummy,JEQ))
-        ::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)
+        SubtractTopStack()
+        @(loadlab //get potential jump address
+        ::Cinstruc(Value(De(D)),Some(colon.Dummy,JEQ)) //do comparison
+        ::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None) //load one
         ::labeldef
-        ::Cinstruc(Unop((D,None),equals.Dummy,Bang,Dest(D)),None)
-        ::loadSP::MtoA::DtoM::incSP)
-//        ::[]
+        ::Cinstruc(Unop((D,None),equals.Dummy,Bang,Dest(D)),None) //invert - the subtraction will have returned 0 if true and we loaded 1 if false
+        ::loadSP::MtoA::DtoM::incSP) //put the number onto the stack
 
         
 let init =
