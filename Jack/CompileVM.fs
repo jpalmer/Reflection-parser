@@ -59,7 +59,18 @@ let compile_line (l:line):JackAsm.line list =
         ::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)
         ::labeldef2
         ::loadSP::MtoA::DtoM::incSP) //put the number onto the stack
-
+    |Gt -> //duplicates Lt code with flip - make betterer
+        let labeldef,loadlab,instr = makelabel()
+        let labeldef2,loadlab2,instr2 = makelabel()
+        SubtractTopStack()
+        @(loadlab //get potential jump address
+        ::Cinstruc(Value(De(D)),Some(colon.Dummy,JLT)) //do comparison
+        ::loadlab2
+        ::Cinstruc(Assign((D,None),equals.Dummy,Zero),Some(colon.Dummy,JMP)) 
+        ::labeldef
+        ::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)
+        ::labeldef2
+        ::loadSP::MtoA::DtoM::incSP) //put the number onto the stack
         
 let init =
    // Ainstruc(Literal(intchar.D '2',intchar.D '5'::intchar.D '6'::[]))

@@ -50,3 +50,4 @@ push constant 82
 or
 not
 " typeof<main> |> CompileVM.compile_main |> PrintAsm.print|> printfn "%s" )
+eprintf "%A" parser.maxerror

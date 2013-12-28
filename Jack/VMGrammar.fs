@@ -9,4 +9,5 @@ type line =
     |[<Prefixs("add")>]Add
     |[<Prefixs("eq")>]Eq
     |[<Prefixs("lt")>]Lt
+    |[<Prefixs("gt")>]Gt
 type main = |L of (Option<line> * Option<whitespace> * Option<end_of_line_comment> * newline) list

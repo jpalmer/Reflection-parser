@@ -2,6 +2,8 @@ module parser
 open Microsoft.FSharp.Reflection
 open Attributes
 open Cache
+type ErrorMessage = {Index : int; expected : UnionCaseInfo[]}
+let mutable maxerror = {Index=0;expected=Operators.Unchecked.defaultof<_>}
 //TODO: SEPERATOR BETWEEN LIST ELEMENTS
 //TODO: When parsing a tuple allow for whitespace between elements - could grab it from grammar.Whitespace.  Also need to think about separators in lists
 type SomeFail<'t> = 
@@ -193,6 +195,9 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
                 |None -> false
                 )) with
     |Some(t) -> true,!result,!resdex
-    |None -> false,!result,index
+    |None -> 
+        if index > maxerror.Index then
+            maxerror <- {Index=index;expected=casesToTest}
+        false,!result,index
 let realparse (text:string) cases= 
     parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,_) -> v
