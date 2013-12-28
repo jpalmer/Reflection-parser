@@ -15,7 +15,7 @@ let compile_a (a:ainstruc) =
     |Literal(l) -> sprintf "0%s" ((bin_int (make_int l)).PadLeft(15,'0')),None
     |ALabel(ll) -> "0", Some(ll)
 let deststring (a)= sprintf "%c%c%c" (if plushas A a then '1' else '0') (if plushas D a then '1' else '0')(if plushas M a then '1' else '0')
-let jumpstring = function |None -> "000" |Some(_,JGT) -> "001" |Some(_,JMP) -> "111" |Some(_,JLE) -> "110" |Some(_,JGE) -> "011" |Some(_,JNE) -> "101" |Some(_,JEQ) -> "010"
+let jumpstring = function |None -> "000" |Some(_,JGT) -> "001" |Some(_,JMP) -> "111" |Some(_,JLE) -> "110" |Some(_,JGE) -> "011" |Some(_,JNE) -> "101" |Some(_,JEQ) -> "010" |Some(_,JLT) -> "100"
 let compile_c (c:cinstruc,j) =
     match c with
     |Assign(d,_,s) ->

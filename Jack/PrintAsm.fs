@@ -29,6 +29,7 @@ let print (L(input):JackAsm.main) =
                     |Some(_,JGE) -> ";JGE"
                     |Some(_,JNE) -> ";JNE"
                     |Some(_,JEQ) -> ";JEQ"
+                    |Some(_,JLT) -> ";JLT"
                  sprintf "%s%s" instrpart jmppart
             )
      |> List.fold (fun s t -> sprintf "%s\n%s" s t) ""

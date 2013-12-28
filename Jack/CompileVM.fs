@@ -47,6 +47,18 @@ let compile_line (l:line):JackAsm.line list =
         ::labeldef
         ::Cinstruc(Unop((D,None),equals.Dummy,Bang,Dest(D)),None) //invert - the subtraction will have returned 0 if true and we loaded 1 if false
         ::loadSP::MtoA::DtoM::incSP) //put the number onto the stack
+    |Lt ->
+        let labeldef,loadlab,instr = makelabel()
+        let labeldef2,loadlab2,instr2 = makelabel()
+        SubtractTopStack()
+        @(loadlab //get potential jump address
+        ::Cinstruc(Value(De(D)),Some(colon.Dummy,JGT)) //do comparison
+        ::loadlab2
+        ::Cinstruc(Assign((D,None),equals.Dummy,Zero),Some(colon.Dummy,JMP)) 
+        ::labeldef
+        ::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)
+        ::labeldef2
+        ::loadSP::MtoA::DtoM::incSP) //put the number onto the stack
 
         
 let init =

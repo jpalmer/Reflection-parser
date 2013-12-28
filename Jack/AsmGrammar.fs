@@ -24,7 +24,7 @@ type dest = dest_ * Option<dest_>
 type RHS_dest = |Dest of dest_ |[<Prefixc('1')>]One |[<Prefixc('0')>]Zero
 type op = |[<Prefixc('+')>] Plus |[<Prefixc('-')>] Minus |[<Prefixc('&')>] And |[<Prefixc('|')>] Or
 type unop = |[<Prefixc('-')>] UMinus |[<Prefixc('!')>] Bang
-type jump = |[<Prefixs("JGT")>] JGT |[<Prefixs("JMP")>] JMP |[<Prefixs("JLE")>] JLE |[<Prefixs("JNE")>] JNE  |[<Prefixs("JGE")>] JGE |[<Prefixs("JEQ")>] JEQ
+type jump = |[<Prefixs("JGT")>] JGT |[<Prefixs("JMP")>] JMP |[<Prefixs("JLE")>] JLE |[<Prefixs("JNE")>] JNE  |[<Prefixs("JGE")>] JGE |[<Prefixs("JEQ")>] JEQ |[<Prefixs("JLT")>] JLT
 type jumpsource = |De of dest_ |[<Prefixc('0')>]Z
 
 type LabelChar = |[<GrabPrefixClass([|
