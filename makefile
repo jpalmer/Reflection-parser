@@ -7,8 +7,12 @@ export COMPILE=${FSC} ${FSC_FLAGS}
 $(shell mkdir -p ${BINDIR})
 export JACKTEST=${BINDIR}Jack-test.dll
 ALLBINS=${BINDIR}Parser.dll ${BINDIR}Jack.dll ${JACKTEST} ${BINDIR}Runner.exe
-.PHONY: all ${ALLBINS}
+.PHONY: all ${ALLBINS} run
+
 all: ${ALLBINS}
+
+run: ${ALLBINS}
+	mono --debug bin/Runner.exe
 
 ${BINDIR}Parser.dll:
 	cd Parser && ${MAKE}

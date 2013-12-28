@@ -71,7 +71,11 @@ let compile_line (l:line):JackAsm.line list =
         ::Cinstruc(Unop((D,None),equals.Dummy,UMinus,One),None)
         ::labeldef2
         ::loadSP::MtoA::DtoM::incSP) //put the number onto the stack
-        
+    |Sub -> []
+    |Neg -> []
+    |And -> []
+    |Or -> []
+    |Not -> []
 let init =
    // Ainstruc(Literal(intchar.D '2',intchar.D '5'::intchar.D '6'::[]))
    // ::Cinstruc(Assign((D,None),equals.Dummy,Dest(A)),None)

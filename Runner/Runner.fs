@@ -2,7 +2,7 @@
 
 open parser
 open VMGrammar
-printfn "%A" (realparse  "// This file is part of www.nand2tetris.org
+let string = "// This file is part of www.nand2tetris.org
 // This file is part of www.nand2tetris.org
 // and the book The Elements of Computing Systems
 // by Nisan and Schocken, MIT Press.
@@ -48,6 +48,5 @@ neg
 and
 push constant 82
 or
-not
-" typeof<main> |> CompileVM.compile_main |> PrintAsm.print|> printfn "%s" )
-eprintf "%A" parser.maxerror
+not"
+realparse string  typeof<main> |> fun (a,b) -> ((if a then eprintf "%A" (prettyerror string));b)  |> CompileVM.compile_main |> PrintAsm.print|> printfn "%s" 

@@ -20,7 +20,7 @@ D=D+A
 @0
 M=D
 "
-        let parsed = parser.realparse input typeof<JackAsm.main>
+        let parsed = parser.realparse input typeof<JackAsm.main> |> snd
         printfn "%A" parsed
         let compiled = CompileAsm.compile_main parsed
         let expected = "0000000000000010"::"1110110000010000"::"0000000000000011"::"1110000010010000"::"0000000000000000"::"1110001100001000"::[]
@@ -53,7 +53,7 @@ M=D
 @14
 0;JMP
 "
-        let parsed = parser.realparse input typeof<JackAsm.main>
+        let parsed = parser.realparse input typeof<JackAsm.main> |> snd
         printfn "%A" parsed
         let compiled = CompileAsm.compile_main parsed
         let expected ="0000000000000000"::"1111110000010000"::"0000000000000001"::"1111010011010000"::"0000000000001010"::"1110001100000001"::"0000000000000001"::"1111110000010000"::"0000000000001100"::"1110101010000111"::"0000000000000000"::"1111110000010000"::"0000000000000010"::"1110001100001000"::"0000000000001110"::"1110101010000111"::[]
@@ -94,7 +94,7 @@ D;JGT
 @23
 0;JMP
 "
-        let parsed = parser.realparse input typeof<JackAsm.main>
+        let parsed = parser.realparse input typeof<JackAsm.main> |> snd
         printfn "%A" parsed
         let compiled = CompileAsm.compile_main parsed
         let expected ="0000000000000000"::"1111110000010000"::"0000000000010111"::"1110001100000110"::"0000000000010000"::"1110001100001000"::"0100000000000000"::"1110110000010000"::"0000000000010001"::"1110001100001000"::"0000000000010001"::"1111110000100000"::"1110111010001000"::"0000000000010001"::"1111110000010000"::"0000000000100000"::"1110000010010000"::"0000000000010001"::"1110001100001000"::"0000000000010000"::"1111110010011000"::"0000000000001010"::"1110001100000001"::"0000000000010111"::"1110101010000111"::[]
@@ -103,7 +103,7 @@ D;JGT
     [<Test>]
     member x.TestPongL() =
         let input = System.IO.File.ReadAllText("PongL.txt")
-        let parsed = parser.realparse input typeof<JackAsm.main>
+        let parsed = parser.realparse input typeof<JackAsm.main> |> snd
         
         let compiled = CompileAsm.compile_main parsed
         let expected = System.IO.File.ReadAllLines("PongL.hack") |> Array.toList
@@ -112,7 +112,7 @@ D;JGT
     [<Test>]
     member x.TestMax() =
         let input = System.IO.File.ReadAllText("Max.txt")
-        let parsed = parser.realparse input typeof<JackAsm.main>
+        let parsed = parser.realparse input typeof<JackAsm.main> |> snd
         printfn "%A" parsed
         let compiled = CompileAsm.compile_main parsed
         let expected = System.IO.File.ReadAllLines("Max.hack") |> Array.toList
@@ -121,7 +121,7 @@ D;JGT
     [<Test>]
     member x.TestRect() =
         let input = System.IO.File.ReadAllText("Rect.txt")
-        let parsed = parser.realparse input typeof<JackAsm.main>
+        let parsed = parser.realparse input typeof<JackAsm.main> |> snd
         printfn "%A" parsed
         let compiled = CompileAsm.compile_main parsed
         let expected = System.IO.File.ReadAllLines("Rect.hack") |> Array.toList
@@ -130,7 +130,7 @@ D;JGT
     [<Test>]
     member x.TestPong() =
         let input = System.IO.File.ReadAllText("Pong.txt")
-        let parsed = parser.realparse input typeof<JackAsm.main>
+        let parsed = parser.realparse input typeof<JackAsm.main> |> snd
         printfn "%A" parsed
         let compiled = CompileAsm.compile_main parsed
         let expected = System.IO.File.ReadAllLines("Pong.hack") |> Array.toList

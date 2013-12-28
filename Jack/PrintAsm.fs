@@ -9,6 +9,7 @@ let printop = function |Plus -> '+' |Minus->'-' |And->'&' |Or->'|'
 let print (L(input):JackAsm.main) =
     input 
     |> List.choose (function |Some(None,line),_,_,_ -> Some(line) |_ -> None) 
+   // |> List.map (fun t -> printfn "TT%A" t;t) 
     |> List.map (function 
             |Ainstruc(Literal(i)) -> sprintf "@%i" <| make_int(i)
             |Ainstruc(ALabel(l)) -> sprintf "@%s" <|  plus_string l
@@ -32,4 +33,4 @@ let print (L(input):JackAsm.main) =
                     |Some(_,JLT) -> ";JLT"
                  sprintf "%s%s" instrpart jmppart
             )
-     |> List.fold (fun s t -> sprintf "%s\n%s" s t) ""
+     |> List.fold (fun s t ->sprintf "%s\n%s" s t) ""

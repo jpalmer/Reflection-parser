@@ -4,6 +4,9 @@ open Attributes
 open Cache
 type ErrorMessage = {Index : int; expected : UnionCaseInfo[]}
 let mutable maxerror = {Index=0;expected=Operators.Unchecked.defaultof<_>}
+let prettyerror (s:string) =
+    let errend = min (maxerror.Index + 20) (s.Length-1)
+    sprintf "Failed at: %s expected a %A" (s.[maxerror.Index .. errend]) (maxerror.expected)
 //TODO: SEPERATOR BETWEEN LIST ELEMENTS
 //TODO: When parsing a tuple allow for whitespace between elements - could grab it from grammar.Whitespace.  Also need to think about separators in lists
 type SomeFail<'t> = 
@@ -200,4 +203,5 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
             maxerror <- {Index=index;expected=casesToTest}
         false,!result,index
 let realparse (text:string) cases= 
-    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,_) -> v
+    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->  if s = text.Length-1 then true, v else false,v
+

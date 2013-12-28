@@ -10,4 +10,9 @@ type line =
     |[<Prefixs("eq")>]Eq
     |[<Prefixs("lt")>]Lt
     |[<Prefixs("gt")>]Gt
+    |[<Prefixs("sub")>]Sub
+    |[<Prefixs("neg")>]Neg
+    |[<Prefixs("and")>]And
+    |[<Prefixs("or")>]Or
+    |[<Prefixs("not")>]Not
 type main = |L of (Option<line> * Option<whitespace> * Option<end_of_line_comment> * newline) list
