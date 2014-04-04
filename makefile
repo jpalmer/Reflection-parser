@@ -1,4 +1,6 @@
-export BINDIR=${shell pwd}/bin/
+ifndef BINDIR
+	BINDIR=${shell pwd}/bin/
+endif
 FSC=fsharpc
 FSC_FLAGS=   --gccerrors -g --nologo
 JACKTESTDIR=Parser/JackTests
@@ -27,8 +29,6 @@ ${TXTS}:
 	cp ${JACKTESTDIR}/*.txt bin
 	cp ${JACKTESTDIR}/*.hack bin
 
-run: ${BINDIR}Runner.exe
-	mono --debug ${BINDIR}Runner.exe
 clean:
 	rm ${ALLBINS}
 
