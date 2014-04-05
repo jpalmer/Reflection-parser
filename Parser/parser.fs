@@ -78,7 +78,7 @@ let checkNotprefix (t:UnionCaseInfo) text (index: int ref) =
             true
         else false
     else true
-
+let stack = new System.Collections.Generic.Stack<_>() //used to stop infinite recursion
 let rec getTypeList_  elemtype text index =
     let worked,res,newind = getTuple elemtype text index
     if worked then //If we got one element there might be more - 
@@ -192,18 +192,24 @@ and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
 and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
     let result = ref Microsoft.FSharp.Core.Operators.Unchecked.defaultof<'t>
     let resdex = ref 0
-    match (casesToTest 
-           |> Array.tryFind (fun t ->
-                match testcase text t index with
-                |Some(newidx,res) ->
-                    result :=res;resdex := newidx; true
-                |None -> false
-                )) with
-    |Some(t) -> true,!result,!resdex
-    |None -> 
-        if index > maxerror.Index then
-            maxerror <- {Index=index;expected=casesToTest}
-        false,!result,index
+    if stack.Contains(index,casesToTest) then 
+        false,!result,index //if we are trying to parse exactly the same object in the same place fail fast (avoids stackoverlow with a recursive grammar
+    else
+        stack.Push(index,casesToTest)
+        let r = casesToTest 
+               |> Array.tryFind (fun t ->
+                    match testcase text t index with
+                    |Some(newidx,res) ->
+                        result :=res;resdex := newidx; true
+                    |None -> false
+                    )
+        stack.Pop() |> ignore
+        match r with
+        |Some(t) -> true,!result,!resdex
+        |None -> 
+            if index > maxerror.Index then
+                maxerror <- {Index=index;expected=casesToTest}
+            false,!result,index
 let realparse (text:string) cases= 
     parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->  if s = text.Length then true, v else false,v
 
