@@ -71,8 +71,7 @@ let optioncache = cacheT<_,_>(fun t ->
 let tuplecache = cache<_,_>(fun (t:System.Type) ->
     Microsoft.FSharp.Reflection.FSharpType.GetTupleElements(t),Microsoft.FSharp.Reflection.FSharpValue.PreComputeTupleConstructor(t))
 
-let testcasecache = cache<_,(_ * obj[] * _ * _)> (fun (t:UnionCaseInfo) ->
+let testcasecache = cache<_,(_ * _)> (fun (t:UnionCaseInfo) ->
     let fields = t.GetFields()
-    let ttype = if fields |> Array.length > 0 then FSharpType.MakeTupleType(fields |> Array.map (fun t -> t.PropertyType)) else null
-    fields,Array.zeroCreate (fields |> Array.length),ttype,FSharpValue.PreComputeUnionConstructor(t)
+    fields,FSharpValue.PreComputeUnionConstructor(t)
     )

@@ -134,7 +134,7 @@ and getOption elemtypes text index =
 and indent = ref 0
 and getType t text index :bool*obj option *int=
     indent := !indent + 1
-//    printfn "%s getting type %A index %i" (System.String(Array.create !indent ' ')) t index
+    //printfn "%s getting type %A index %i" (System.String(Array.create !indent ' ')) t index
     let w,r,i = 
         match typify t with
         |OtherL(subt) ->
@@ -152,14 +152,15 @@ and getType t text index :bool*obj option *int=
         | _ -> 
 //            printfn "I don't know how to get %A" t
             false,None,index
-//    if w then
-//        printfn "%s got type %A index %i" (System.String(Array.create !indent ' ')) t index
+   // if w then
+     //   printfn "%s got %A index %i value %A" (System.String(Array.create !indent ' ')) t index (r.Value)
     indent := !indent - 1
     w,r,i
 
 
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
-    let fields,result,tupletype,ucon = testcasecache.Get(testcase) 
+    let fields,ucon = testcasecache.Get(testcase) 
+    let result = Array.zeroCreate(fields |> Array.length)
     let index = ref idx
     let checkok = //preliminary checks
         if idx < text.Length then //this does some unnecersarry checks - can optimise if necersarry later
@@ -194,7 +195,8 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
     match (casesToTest 
            |> Array.tryFind (fun t ->
                 match testcase text t index with
-                |Some(newidx,res) ->result :=res;resdex := newidx; true
+                |Some(newidx,res) ->
+                    result :=res;resdex := newidx; true
                 |None -> false
                 )) with
     |Some(t) -> true,!result,!resdex
@@ -203,5 +205,5 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
             maxerror <- {Index=index;expected=casesToTest}
         false,!result,index
 let realparse (text:string) cases= 
-    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->  if s = text.Length-1 then true, v else false,v
+    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->  if s = text.Length then true, v else false,v
 
