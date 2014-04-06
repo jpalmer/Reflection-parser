@@ -132,9 +132,10 @@ and getOption elemtypes text index =
     |false -> none,index
 //need to add support for option types
 and indent = ref 0
+and indentstr() = (System.String(Array.create !indent ' '))
 and getType t text index :bool*obj option *int=
     indent := !indent + 1
-    //printfn "%s getting type %A index %i" (System.String(Array.create !indent ' ')) t index
+    //printfn "%s getting type %A index %i" (indentstr()) t index
     let w,r,i = 
         match typify t with
         |OtherL(subt) ->
@@ -153,13 +154,14 @@ and getType t text index :bool*obj option *int=
 //            printfn "I don't know how to get %A" t
             false,None,index
    // if w then
-     //   printfn "%s got %A index %i value %A" (System.String(Array.create !indent ' ')) t index (r.Value)
+     //   printfn "%s got %A index %i value %A" (indentstr()) t index (r.Value)
     indent := !indent - 1
     w,r,i
 
 
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
     let fields,ucon = testcasecache.Get(testcase) 
+   // printfn "%s TESTCASE %A" <| indentstr() <| fields
     let result = Array.zeroCreate(fields |> Array.length)
     let index = ref idx
     let checkok = //preliminary checks
@@ -196,17 +198,14 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
         false,!result,index //if we are trying to parse exactly the same object in the same place fail fast (avoids stackoverlow with a recursive grammar
     else
         stack.Push(index,casesToTest)
-        let r = casesToTest 
-               |> Array.tryFind (fun t ->
-                    match testcase text t index with
-                    |Some(newidx,res) ->
-                        result :=res;resdex := newidx; true
-                    |None -> false
-                    )
+        let r = casesToTest  //get the longest match
+               |> Array.choose (fun t -> testcase text t index )|> Array.sortBy (fun (a,_) -> -a) |> Array.toList
         stack.Pop() |> ignore
         match r with
-        |Some(t) -> true,!result,!resdex
-        |None -> 
+        |(idx,r)::_ ->
+            printfn " %s got %A at %i" (indentstr()) r idx
+            true,r,idx
+        |_ -> 
             if index > maxerror.Index then
                 maxerror <- {Index=index;expected=casesToTest}
             false,!result,index
