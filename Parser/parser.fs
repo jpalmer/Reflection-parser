@@ -133,18 +133,20 @@ and getOption elemtypes text index =
 //need to add support for option types
 and indent = ref 0
 and indentstr() = (System.String(Array.create !indent ' '))
+and gettype_cache = System.Collections.Generic.List<_>() //will use for storing negative results
 and getType t text index :bool*obj option *int=
-    if !indent < 10 then
+    printfn "%A" (!indent)
+    if !indent < 10(* && not <| gettype_cache.Contains(index,t)*) then
         indent := !indent + 1
         //printfn "%s getting type %A index %i" (indentstr()) t index
         let w,r,i = 
             match typify t with
             |OtherL(subt) ->
                  let r,newind = getTypeList subt text index
-                 true,Some(r),newind
+                 true,Some(r),newind //we con always match a list (empty for example, so return true)
             |FSOption(optt) -> 
                 let r,newind = getOption optt text index
-                true,Some(r),newind
+                true,Some(r),newind //we can also always match a option (return None, so return true)
             |FSUnion(t) ->
                 let worked,res,dex = parse text t index
                 worked,Some(res|>box),dex
@@ -152,11 +154,12 @@ and getType t text index :bool*obj option *int=
                 let worked,res,dex = getTuple t text index
                 worked,Some(res),dex
             | _ -> 
-    //            printfn "I don't know how to get %A" t
-                false,None,index
+                //printfn "I don't know how to get %A" t
+                false,None(*Some(None|>box)*),index
        // if w then
          //   printfn "%s got %A index %i value %A" (indentstr()) t index (r.Value)
         indent := !indent - 1
+        if w = false && not<| gettype_cache.Contains(index,t) then gettype_cache.Add(index,t)
         w,r,i
     else false,Some(None |> box),index
 
@@ -212,5 +215,5 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
                 maxerror <- {Index=index;expected=casesToTest}
             false,!result,index
 let realparse (text:string) cases= 
-    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->  if s = text.Length then true, v else false,v
+    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->gettype_cache :> seq<_> |> Seq.iter (printfn "cache:%A") ;  if s = text.Length then true, v else false,v
 
