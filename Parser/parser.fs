@@ -134,29 +134,31 @@ and getOption elemtypes text index =
 and indent = ref 0
 and indentstr() = (System.String(Array.create !indent ' '))
 and getType t text index :bool*obj option *int=
-    indent := !indent + 1
-    //printfn "%s getting type %A index %i" (indentstr()) t index
-    let w,r,i = 
-        match typify t with
-        |OtherL(subt) ->
-             let r,newind = getTypeList subt text index
-             true,Some(r),newind
-        |FSOption(optt) -> 
-            let r,newind = getOption optt text index
-            true,Some(r),newind
-        |FSUnion(t) ->
-            let worked,res,dex = parse text t index
-            worked,Some(res|>box),dex
-        |FSTuple ->
-            let worked,res,dex = getTuple t text index
-            worked,Some(res),dex
-        | _ -> 
-//            printfn "I don't know how to get %A" t
-            false,None,index
-   // if w then
-     //   printfn "%s got %A index %i value %A" (indentstr()) t index (r.Value)
-    indent := !indent - 1
-    w,r,i
+    if !indent < 10 then
+        indent := !indent + 1
+        //printfn "%s getting type %A index %i" (indentstr()) t index
+        let w,r,i = 
+            match typify t with
+            |OtherL(subt) ->
+                 let r,newind = getTypeList subt text index
+                 true,Some(r),newind
+            |FSOption(optt) -> 
+                let r,newind = getOption optt text index
+                true,Some(r),newind
+            |FSUnion(t) ->
+                let worked,res,dex = parse text t index
+                worked,Some(res|>box),dex
+            |FSTuple ->
+                let worked,res,dex = getTuple t text index
+                worked,Some(res),dex
+            | _ -> 
+    //            printfn "I don't know how to get %A" t
+                false,None,index
+       // if w then
+         //   printfn "%s got %A index %i value %A" (indentstr()) t index (r.Value)
+        indent := !indent - 1
+        w,r,i
+    else false,Some(None |> box),index
 
 
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
@@ -194,7 +196,7 @@ and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
 and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
     let result = ref Microsoft.FSharp.Core.Operators.Unchecked.defaultof<'t>
     let resdex = ref 0
-    if stack.Contains(index,casesToTest) then 
+    if false (*stack.Contains(index,casesToTest)*) then 
         false,!result,index //if we are trying to parse exactly the same object in the same place fail fast (avoids stackoverlow with a recursive grammar
     else
         stack.Push(index,casesToTest)
@@ -203,7 +205,7 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
         stack.Pop() |> ignore
         match r with
         |(idx,r)::_ ->
-            printfn " %s got %A at %i" (indentstr()) r idx
+            //printfn " %s got %A at %i" (indentstr()) r idx
             true,r,idx
         |_ -> 
             if index > maxerror.Index then
