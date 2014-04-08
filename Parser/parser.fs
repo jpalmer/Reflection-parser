@@ -133,10 +133,10 @@ and getOption elemtypes text index =
 //need to add support for option types
 and indent = ref 0
 and indentstr() = (System.String(Array.create !indent ' '))
-and gettype_cache = System.Collections.Generic.List<_>() //will use for storing negative results
+//and gettype_cache = System.Collections.Generic.List<_>() //will use for storing negative results
 and getType t text index :bool*obj option *int=
-    printfn "%A" (!indent)
-    if !indent < 10(* && not <| gettype_cache.Contains(index,t)*) then
+    //printfn "%A" (!indent)
+ //   if !indent < 11(* && not <| gettype_cache.Contains(index,t)*) then
         indent := !indent + 1
         //printfn "%s getting type %A index %i" (indentstr()) t index
         let w,r,i = 
@@ -159,9 +159,9 @@ and getType t text index :bool*obj option *int=
        // if w then
          //   printfn "%s got %A index %i value %A" (indentstr()) t index (r.Value)
         indent := !indent - 1
-        if w = false && not<| gettype_cache.Contains(index,t) then gettype_cache.Add(index,t)
+   //     if w = false && not<| gettype_cache.Contains(index,t) then gettype_cache.Add(index,t)
         w,r,i
-    else false,Some(None |> box),index
+//    else false,Some(None |> box),index
 
 
 and testcase (text:char[]) (testcase:UnionCaseInfo) idx : (int * 't) option=
@@ -215,5 +215,5 @@ and parse (text:char[]) (casesToTest:UnionCaseInfo[]) index :bool*'t*int=
                 maxerror <- {Index=index;expected=casesToTest}
             false,!result,index
 let realparse (text:string) cases= 
-    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->gettype_cache :> seq<_> |> Seq.iter (printfn "cache:%A") ;  if s = text.Length then true, v else false,v
+    parse (text.ToCharArray()) (Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(cases)) 0 |> fun (_,v,s) ->  if s = text.Length then true, v else false,v
 
